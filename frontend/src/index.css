@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* K-AERS design tokens (Phase 1 — foundation) */
+:root {
+  --kaers-bg: #f8fafc;
+  --kaers-surface: #ffffff;
+  --kaers-border: #e2e8f0;
+  --kaers-text: #0f172a;
+  --kaers-muted: #64748b;
+  --kaers-primary: #2563eb;
+}
+
+body {
+  background-color: var(--kaers-bg);
+  color: var(--kaers-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

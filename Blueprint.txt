@@ -1,0 +1,1945 @@
+# Ksquare K-ARES
+## Ksquare AI Reliability, Evaluation & Security Platform
+
+**Project Proposal, Technical Blueprint, and Implementation Roadmap**
+
+**Prepared for:** Ksquare Solutions & Accelerators  
+**Project category:** Internal AI Engineering Platform  
+**Initial integrations:** KODI and AI agent/automation applications  
+**Status:** Proposed
+
+---
+
+# 1. Executive Summary
+
+Ksquare K-ARES (Ksquare AI Reliability, Evaluation & Security) is a centralized platform designed to measure, evaluate, monitor, and improve the quality, performance, reliability, and security of AI-powered applications developed within Ksquare Solutions & Accelerators.
+
+As AI applications become more complex, evaluating them manually becomes inefficient and inconsistent. A chatbot may generate a plausible but incorrect answer, a Retrieval-Augmented Generation (RAG) application may retrieve irrelevant documents, or an AI agent may invoke an inappropriate tool. These issues can be difficult to identify through manual testing alone.
+
+K-ARES addresses this challenge by providing a standardized evaluation framework that can be integrated with multiple AI applications. It will execute predefined test cases, calculate evaluation metrics, display results in a centralized dashboard, identify failure patterns, and help developers compare application versions before releasing changes.
+
+The platform will initially focus on two use cases:
+
+1. **KODI evaluation:** Assess document retrieval, answer correctness, citation quality, groundedness, latency, and reliability.
+2. **AI agent evaluation:** Assess task completion, tool selection, execution correctness, failure handling, latency, and cost.
+
+The architecture will be modular, allowing additional AI applications to be integrated through APIs or SDKs without rebuilding the evaluation system.
+
+K-ARES is intended to complement existing testing and observability tools by providing AI-specific evaluation capabilities, rather than replacing conventional software testing.
+
+## 1.1 Vision
+
+Build a reusable, extensible platform that enables Ksquare teams to evaluate AI applications using measurable evidence instead of relying exclusively on manual inspection.
+
+## 1.2 Core Objectives
+
+- Establish standardized evaluation metrics for AI applications.
+- Automate repeatable evaluation workflows.
+- Measure accuracy, retrieval quality, latency, cost, and reliability.
+- Identify weaknesses in prompts, retrieval pipelines, models, and agent workflows.
+- Compare results across model, prompt, configuration, and code versions.
+- Detect regressions before deployment.
+- Provide understandable reports for developers, technical leads, and managers.
+- Introduce security and safety evaluations for AI-specific risks.
+- Enable multiple projects to reuse the same evaluation infrastructure.
+
+---
+
+# 2. Problem Statement
+
+Traditional software testing usually checks whether a function returns an expected result for a known input. Generative AI introduces additional challenges because its outputs can vary, and multiple answers may be semantically correct.
+
+A successful HTTP response does not necessarily mean that an AI application has produced a correct answer.
+
+For example, KODI might return a fluent answer that is not supported by the uploaded documents. An AI agent might report that a task was completed even though a required tool call failed. A system may also produce correct answers but take too long or consume excessive tokens.
+
+Without a consistent evaluation framework, teams may face the following problems:
+
+- **Inconsistent testing:** Each project uses different test cases and evaluation methods.
+- **Limited visibility:** Developers cannot easily determine why an AI application failed.
+- **Manual effort:** Repeatedly checking large numbers of responses is time-consuming.
+- **Regression risks:** Changes to prompts, models, retrieval settings, or code may reduce quality without being detected.
+- **Performance uncertainty:** Latency and resource consumption may not be measured consistently.
+- **Weak traceability:** Results may not be linked to the model, prompt, configuration, and application version that produced them.
+- **Security gaps:** Prompt injection, sensitive-data leakage, and unsafe tool use may not be systematically tested.
+- **Difficult comparisons:** Teams may lack objective evidence when deciding between different models or configurations.
+
+K-ARES will address these problems through repeatable test execution, metric calculation, result tracking, failure analysis, and version-to-version comparison.
+
+---
+
+# 3. Proposed Solution
+
+K-ARES will act as a common evaluation layer between AI applications and their development teams.
+
+It will accept an evaluation dataset, execute test cases against a selected application version, collect responses and execution traces, calculate relevant metrics, and present the results through a web dashboard.
+
+## 3.1 High-Level Workflow
+
+**Register → Configure → Test → Evaluate → Diagnose → Compare → Verify**
+
+1. **Register:** Add an AI application such as KODI or an AI agent.
+2. **Configure:** Define its endpoint, authentication method, evaluation settings, and test dataset.
+3. **Test:** Execute the selected test cases against the application.
+4. **Evaluate:** Calculate deterministic and model-assisted evaluation metrics.
+5. **Diagnose:** Identify failed cases and likely failure categories.
+6. **Compare:** Compare the results with a baseline or another application version.
+7. **Verify:** Rerun failed cases or the complete evaluation suite after changes.
+
+## 3.2 Main Features
+
+### A. Application Registry
+
+Maintain a central registry of AI applications evaluated by K-ARES.
+
+Each registered application should have:
+
+- Application name and description.
+- Application category, such as RAG, chatbot, or agent.
+- Environment, such as development, staging, or production.
+- Endpoint or SDK integration details.
+- Authentication configuration.
+- Supported evaluation capabilities.
+- Owner or responsible team.
+- Current application version.
+- Associated datasets and evaluation runs.
+
+Secrets must be stored securely and must never be displayed in plain text in the dashboard or logs.
+
+### B. Dataset Management
+
+Allow users to create, upload, edit, version, and reuse evaluation datasets.
+
+A dataset may contain:
+
+- Input question or task.
+- Expected answer or outcome.
+- Reference documents or evidence.
+- Expected citations, when applicable.
+- Expected tool calls or task constraints.
+- Evaluation category.
+- Difficulty level.
+- Tags and metadata.
+
+Datasets should be versioned so that evaluation results remain reproducible even after the original dataset changes.
+
+### C. Automated Evaluation Engine
+
+Execute test cases against registered applications and collect their responses.
+
+The engine should support:
+
+- Sequential execution.
+- Bounded concurrent execution.
+- Configurable timeouts.
+- Retry policies for transient errors.
+- Rate-limit handling.
+- Failed-request capture.
+- Per-test-case metrics.
+- Aggregate evaluation reports.
+
+Retries should be recorded separately from the original attempt. A timeout or application error must not be silently treated as a successful evaluation.
+
+### D. Evaluation Dashboard
+
+Display the overall health and performance of each AI application.
+
+The dashboard should include:
+
+- Overall evaluation score.
+- Individual metric scores.
+- Number of test cases executed.
+- Passed and failed test cases.
+- Error and timeout rates.
+- Average and percentile latency.
+- Token usage and estimated cost, when available.
+- Comparison with a previous run.
+- Failure categories and recurring issues.
+- Detailed test-case results.
+
+### E. Failure Analysis
+
+For every failed test case, show:
+
+- Original input.
+- Expected result, if available.
+- Actual result.
+- Relevant context or evidence.
+- Metric scores.
+- Error message, where applicable.
+- Application version and configuration.
+- Execution duration.
+- Likely failure category.
+- Recommended investigation steps.
+
+Possible failure categories include retrieval failure, incorrect generation, unsupported claim, citation mismatch, tool-selection error, timeout, malformed response, and security-policy violation.
+
+Failure explanations should be presented as diagnostic suggestions, not as guaranteed root causes.
+
+### F. Version Comparison and Regression Testing
+
+Allow users to compare two evaluation runs.
+
+For example, a developer may compare KODI before and after changing its chunking strategy or compare two LLM providers.
+
+The comparison should display:
+
+- Changes in individual metric scores.
+- Changes in latency and cost.
+- New failures.
+- Previously failing tests that now pass.
+- Overall improvement or degradation.
+- Whether defined release thresholds were satisfied.
+
+### G. Evaluation Reports
+
+Generate downloadable reports summarizing the evaluation run.
+
+Reports should include the dataset version, application version, configuration, metrics, failed cases, execution errors, and comparison results.
+
+---
+
+# 4. Scope and Non-Goals
+
+## 4.1 Initial Scope
+
+The first version should focus on:
+
+- Registering AI applications.
+- Managing evaluation datasets.
+- Running automated test suites.
+- Evaluating RAG and AI agent applications.
+- Measuring quality, latency, reliability, and cost.
+- Displaying detailed results through a web dashboard.
+- Comparing evaluation runs.
+- Identifying regressions.
+- Exporting reports.
+- Providing basic security and safety tests.
+
+## 4.2 Future Scope
+
+Potential later additions include:
+
+- Continuous evaluation during development and deployment.
+- CI/CD integration.
+- Scheduled evaluation runs.
+- Production trace sampling and monitoring.
+- Human review workflows.
+- Advanced failure clustering.
+- Model and configuration recommendations.
+- Multi-team access controls and audit logs.
+- More advanced agent trajectory evaluation.
+- Integration with additional Ksquare applications.
+
+## 4.3 Non-Goals for the Initial Release
+
+K-ARES should not initially attempt to:
+
+- Replace the existing applications being evaluated.
+- Replace general-purpose application monitoring.
+- Guarantee that every AI answer is factually correct.
+- Automatically modify production prompts or models.
+- Support every AI framework from day one.
+- Require a dedicated LLM judge for every metric.
+- Block deployment based on a single aggregate score without considering critical failures.
+
+The first release should prioritize measurable, explainable evaluation results over a large number of features.
+
+---
+
+# 5. Evaluation Metrics
+
+The platform should use different metrics for different application types. A RAG application and a multi-step AI agent do not have identical evaluation requirements.
+
+Each metric should include a definition, calculation method, applicability, threshold, and interpretation.
+
+## 5.1 Accuracy and Answer Quality
+
+### A. Exact Match
+
+Measures whether the generated answer exactly matches the expected answer after any explicitly configured normalization.
+
+**Formula:**
+
+Exact Match = Number of exact matches / Number of evaluated cases
+
+Best suited for deterministic outputs, IDs, labels, dates, and structured fields. It is often too strict for open-ended natural-language answers.
+
+### B. Semantic Answer Similarity
+
+Measures the semantic similarity between an actual answer and a reference answer.
+
+It may use embeddings or a dedicated evaluation model.
+
+A high similarity score does not guarantee factual correctness. Two answers can be semantically similar while differing in an important number or condition.
+
+### C. Correctness
+
+Measures whether the response correctly answers the question or completes the requested task.
+
+Evaluation methods may include:
+
+- Exact comparison for deterministic outputs.
+- Rule-based checks for structured responses.
+- Domain-specific validation.
+- Reference-based evaluation.
+- LLM-as-a-judge for suitable open-ended questions.
+- Human review for ambiguous or high-impact cases.
+
+### D. Completeness
+
+Measures whether the answer includes the required information.
+
+For example, a question asking for the best-performing product may require the product name, sales value, reporting period, and calculation method. Returning only the product name may be incomplete.
+
+### E. Format Compliance
+
+Measures whether the response follows a required schema or format.
+
+Examples include valid JSON, required fields, specified data types, or a required response structure.
+
+For structured outputs, use deterministic validators whenever possible.
+
+---
+
+## 5.2 RAG-Specific Metrics
+
+These metrics are particularly important for KODI.
+
+### A. Retrieval Precision@K
+
+Measures the proportion of the top K retrieved chunks that are relevant.
+
+**Formula:**
+
+Precision@K = Relevant retrieved chunks in top K / K
+
+This indicates how much of the retrieved context is useful.
+
+### B. Retrieval Recall@K
+
+Measures the proportion of all known relevant chunks that appear among the top K retrieved chunks.
+
+**Formula:**
+
+Recall@K = Relevant retrieved chunks in top K / Total relevant chunks
+
+This indicates whether the retrieval system is finding the evidence required to answer the question.
+
+Precision and recall should be calculated using labeled relevance judgments or another explicitly defined reference method.
+
+### C. Mean Reciprocal Rank (MRR)
+
+Measures how highly the first relevant retrieved result appears.
+
+For a query, the reciprocal rank is the inverse of the position of the first relevant result. MRR is the average reciprocal rank across queries.
+
+A higher MRR means relevant evidence tends to appear closer to the top of the retrieval results.
+
+### D. NDCG@K
+
+Normalized Discounted Cumulative Gain evaluates the ranking of retrieved results and can account for different relevance grades.
+
+It is useful when highly relevant chunks should rank above partially relevant chunks.
+
+### E. Faithfulness or Groundedness
+
+Measures whether the claims made in an answer are supported by the retrieved context or source documents.
+
+A response may be correct according to general knowledge but still fail groundedness if KODI presents it as information extracted from a document when the document does not support it.
+
+Groundedness can be evaluated through claim-level evidence checks, an LLM judge, or human review.
+
+### F. Citation Precision
+
+Measures whether cited sources actually support the claims they are attached to.
+
+A citation pointing to an unrelated document or irrelevant passage should be marked incorrect.
+
+### G. Citation Coverage
+
+Measures the proportion of claims requiring evidence that have adequate supporting citations.
+
+The evaluation rules must specify which claims require citations. Otherwise, the score may be inconsistent.
+
+### H. Context Relevance
+
+Measures whether the retrieved context is relevant to the user's question.
+
+It can be evaluated at chunk level, document level, or both.
+
+### I. Answer Relevance
+
+Measures whether the generated response directly addresses the user's question rather than returning unrelated or unnecessary information.
+
+### J. No-Answer and Abstention Quality
+
+Measures whether KODI appropriately declines to answer when sufficient evidence is unavailable.
+
+This should evaluate both:
+
+- **Appropriate abstention:** The system avoids unsupported answers when evidence is insufficient.
+- **Unnecessary abstention:** The system refuses to answer even though the required evidence is available.
+
+### K. Context Utilization
+
+Measures whether the answer uses the relevant evidence retrieved for the question.
+
+This helps identify cases where the retriever finds the correct information but the generator ignores it.
+
+### L. Document and Tenant Isolation
+
+Checks whether the application retrieves or cites information from documents that should not be accessible to the requesting user or organization.
+
+This is a critical security property. It should be tested with explicit access-control cases rather than inferred from an aggregate retrieval score.
+
+---
+
+## 5.3 AI Agent Metrics
+
+These metrics apply to applications that use tools, APIs, multiple steps, or autonomous workflows.
+
+### A. Task Success Rate
+
+Measures the proportion of test tasks completed according to their defined success criteria.
+
+Task Success Rate = Successfully completed tasks / Total evaluated tasks
+
+Success criteria should be explicit and independently verifiable wherever possible.
+
+### B. Tool Selection Accuracy
+
+Measures whether the agent selects the appropriate tool for a task.
+
+For example, a database query should use the intended database tool rather than an unrelated search tool.
+
+### C. Tool Execution Success Rate
+
+Measures how often attempted tool calls execute successfully.
+
+A successful tool call does not necessarily imply a successful task, so these metrics must be tracked separately.
+
+### D. Argument Correctness
+
+Measures whether tool calls contain valid and appropriate arguments.
+
+Checks may include schema validation, required fields, value ranges, and task-specific constraints.
+
+### E. Workflow Completion Rate
+
+Measures whether the required sequence of steps or milestones is completed.
+
+This is useful for multi-step workflows such as retrieving information, validating it, and generating a report.
+
+### F. Recovery Rate
+
+Measures whether the agent successfully recovers from defined failures, such as a transient API error or an invalid tool response.
+
+Recovery must be evaluated against known failure scenarios.
+
+### G. Unnecessary Tool Calls
+
+Measures tool calls that do not contribute to the task or violate the defined workflow.
+
+The evaluation should account for tasks where exploratory calls are legitimately required.
+
+### H. Human Intervention Rate
+
+Measures the proportion of tasks that require manual intervention to complete.
+
+This is useful for understanding the operational autonomy of an agent.
+
+### I. Unsafe Action Rate
+
+Measures the frequency of policy-violating or unauthorized actions in controlled tests.
+
+Critical security failures should be reported separately rather than averaged away by good performance on ordinary tasks.
+
+---
+
+## 5.4 Performance and Cost Metrics
+
+### A. End-to-End Latency
+
+Measures the time from the beginning of a request until the final response is available.
+
+### B. Time to First Token
+
+Measures how long a streaming application takes to begin returning generated output, when applicable.
+
+### C. Percentile Latency
+
+Report at least:
+
+- P50 latency: the median response time.
+- P95 latency: the time within which 95% of measured requests complete.
+- P99 latency: useful for larger workloads when enough samples are available.
+
+Percentile values are more informative than averages alone because they reveal slow outliers.
+
+### D. Throughput
+
+Measures the number of requests or tasks completed per unit of time under a defined workload.
+
+### E. Error Rate
+
+Measures the proportion of requests that fail because of timeouts, exceptions, invalid responses, or other defined errors.
+
+### F. Token Usage
+
+Tracks input and output tokens when the provider exposes reliable token counts.
+
+### G. Cost per Request
+
+Estimates the cost of an individual request using actual provider usage and the applicable pricing configuration.
+
+### H. Cost per Successful Task
+
+Measures the estimated cost of completing a task successfully.
+
+This is often more useful for agentic applications than cost per request because one task may involve multiple model calls and tool operations.
+
+### I. Retry Rate
+
+Measures how frequently requests require retries.
+
+A high retry rate may indicate instability, rate limiting, or an incorrect timeout configuration.
+
+### J. Resource Utilization
+
+Where available, collect CPU, memory, database, or other relevant infrastructure measurements. These are optional for the initial version and depend on the deployment environment.
+
+---
+
+## 5.5 Reliability and Security Metrics
+
+- **Availability:** Whether the application can be reached and complete valid requests.
+- **Timeout rate:** Percentage of requests exceeding the configured timeout.
+- **Schema validation failure rate:** Percentage of outputs that violate the required format.
+- **Prompt-injection resistance:** Performance on controlled malicious-input test cases.
+- **Sensitive-data leakage rate:** Frequency of unauthorized sensitive information appearing in responses.
+- **Access-control violation rate:** Frequency of unauthorized resource access.
+- **Unsafe tool-call rate:** Frequency of prohibited or unauthorized actions.
+- **Policy compliance:** Whether responses and actions conform to the application's documented policies.
+- **Reproducibility:** Whether repeated evaluation runs under the same recorded configuration produce sufficiently consistent results.
+
+Security tests should be conducted in controlled environments with synthetic or authorized test data. The platform should avoid logging secrets or sensitive content unnecessarily.
+
+---
+
+# 6. Recommended Initial Metrics
+
+The first release should avoid trying to implement every possible metric at once.
+
+## 6.1 Initial KODI Metrics
+
+1. Retrieval Precision@K.
+2. Retrieval Recall@K.
+3. MRR or NDCG@K.
+4. Answer correctness.
+5. Faithfulness or groundedness.
+6. Citation precision.
+7. Citation coverage.
+8. Answer relevance.
+9. Appropriate abstention.
+10. End-to-end latency and P95 latency.
+11. Error and timeout rate.
+12. Estimated cost per request.
+13. Document and organization isolation tests.
+
+## 6.2 Initial AI Agent Metrics
+
+1. Task success rate.
+2. Tool selection accuracy.
+3. Tool execution success rate.
+4. Tool argument correctness.
+5. Workflow completion rate.
+6. Recovery rate.
+7. End-to-end latency and P95 latency.
+8. Error and timeout rate.
+9. Estimated cost per successful task.
+10. Unsafe action and access-control violation rates.
+
+## 6.3 Metric Implementation Priority
+
+**Phase 1 — Deterministic metrics:** latency, errors, exact match, schema validation, retrieval ranking metrics, task completion checks, and cost calculations when usage data is available.
+
+**Phase 2 — Model-assisted metrics:** answer correctness, groundedness, relevance, and completeness using a calibrated LLM judge where appropriate.
+
+**Phase 3 — Advanced evaluation:** security test suites, failure clustering, production trace analysis, and automated regression gates.
+
+This order helps keep the first version understandable and reduces dependence on expensive or inconsistent model-based judgments.
+
+---
+
+# 7. Evaluation Dataset Design
+
+The quality of K-ARES depends heavily on the quality of its evaluation datasets.
+
+A dataset should contain realistic questions and tasks, expected outcomes, and enough metadata to explain what each test is measuring.
+
+## 7.1 Recommended Dataset Categories for KODI
+
+- **Simple factual questions:** Answers are explicitly stated in one passage.
+- **Multi-hop questions:** Answers require combining information from multiple passages.
+- **Numerical questions:** Answers require calculations or comparison of values.
+- **Table-based questions:** Answers require extracting and interpreting structured data.
+- **Document-specific questions:** Answers require retrieving information from a particular document.
+- **Cross-document questions:** Answers require combining evidence from several documents.
+- **Ambiguous questions:** The system should request clarification or state uncertainty.
+- **Unanswerable questions:** The required evidence is absent.
+- **Conflicting evidence:** Sources contain inconsistent information that should be handled appropriately.
+- **Citation tests:** Correct claims must be supported by the correct passages.
+- **Access-control tests:** Users must not access documents outside their permissions.
+- **Long-document questions:** Required evidence appears in a lengthy document.
+- **Structured extraction:** The system must return information in a required schema.
+
+## 7.2 Recommended Dataset Categories for AI Agents
+
+- Straightforward task completion.
+- Multi-step tasks.
+- Tool selection.
+- Tool argument validation.
+- Tool failure and retry handling.
+- Missing information.
+- Ambiguous user instructions.
+- Unauthorized tool access.
+- Prompt-injection attempts.
+- Invalid or unexpected tool responses.
+- Task cancellation and stopping conditions.
+- Duplicate action prevention.
+
+## 7.3 Example KODI Dataset
+
+| Test ID | Question | Expected result | Category |
+|---|---|---|---|
+| KODI-001 | What was the total revenue in the report? | Correct value from the source report | Numerical |
+| KODI-002 | Which product generated the highest sales? | Correct product based on the stated period and metric | Table analysis |
+| KODI-003 | What is the payment due date? | Correct date with a supporting citation | Factual |
+| KODI-004 | Compare the revenue of two business units. | Correct comparison based on the source data | Multi-step |
+| KODI-005 | What is the employee's private identifier? | Refuse or restrict access if the user is unauthorized | Security |
+| KODI-006 | What does the document say about an unmentioned policy? | State that the information is unavailable in the provided evidence | Unanswerable |
+| KODI-007 | Summarize the obligations stated in the contract. | Accurate summary of the relevant clauses | Legal-document analysis |
+| KODI-008 | What is the average monthly sales value? | Correct calculation using the specified months | Numerical |
+
+These are example test definitions. Expected values and supporting evidence must be populated from the actual documents used for evaluation.
+
+## 7.4 Dataset Quality Rules
+
+- Use representative, realistic inputs.
+- Include both easy and difficult cases.
+- Include negative and unanswerable cases.
+- Keep evaluation datasets versioned.
+- Separate development examples from held-out evaluation examples.
+- Document the expected answer and the evidence supporting it.
+- Avoid using LLM-generated expected answers without validation.
+- Record the source and creation method of each test case.
+- Remove or mask sensitive data unless it is explicitly required and authorized for the test.
+- Ensure that security datasets do not expose real credentials or private information.
+
+---
+
+# 8. Evaluation Methodology
+
+K-ARES should use a combination of deterministic checks, model-assisted evaluation, and human review.
+
+## 8.1 Deterministic Evaluation
+
+Use normal code wherever a result can be checked objectively.
+
+Examples:
+
+- Exact values and IDs.
+- JSON schema compliance.
+- Required fields.
+- Arithmetic calculations.
+- Retrieval ranking metrics with labeled evidence.
+- Tool-call schema validation.
+- HTTP status and timeout checks.
+- Access-control expectations.
+- Task completion flags.
+
+Deterministic evaluation is usually faster, easier to reproduce, and cheaper than asking another LLM to judge every result.
+
+## 8.2 LLM-as-a-Judge
+
+For open-ended responses, an LLM can assess criteria such as correctness, relevance, groundedness, completeness, and instruction following.
+
+A judge should receive:
+
+- The evaluation question or task.
+- The expected answer or reference criteria, when available.
+- The actual answer.
+- Relevant retrieved context or tool trace.
+- A clear scoring rubric.
+- An explicit output schema.
+- Instructions to distinguish supported evidence from unsupported claims.
+
+The judge should return structured results, for example:
+
+- Score.
+- Pass/fail judgment.
+- Short explanation.
+- Evidence supporting the judgment.
+- Identified failure category.
+
+LLM-based judgments are estimates, not ground truth. They can be biased by answer length, writing style, model preferences, or ambiguous rubrics.
+
+## 8.3 Human Review
+
+Human review should be used to:
+
+- Validate the judge's reliability.
+- Resolve ambiguous cases.
+- Review critical failures.
+- Calibrate scoring rubrics.
+- Investigate disagreement between metrics.
+- Approve evaluation datasets for important business workflows.
+
+A sample of model-judged results should be periodically reviewed by humans to estimate judge accuracy.
+
+## 8.4 Repeated Evaluation
+
+Some LLM responses vary across runs. For tests where nondeterminism matters, execute the same test multiple times and report the variability.
+
+Track:
+
+- Mean and median score.
+- Pass rate across repetitions.
+- Score variation.
+- Failure consistency.
+- Latency variation.
+
+Repeated execution should be configurable because it increases execution time and cost.
+
+---
+
+# 9. Proposed System Architecture
+
+K-ARES should follow a modular architecture with a shared evaluation engine and application-specific adapters.
+
+## 9.1 High-Level Components
+
+1. **Frontend:** Dashboard, application registry, dataset editor, test-run controls, result views, and reports.
+2. **Backend API:** Manages users, applications, datasets, evaluation configurations, and run requests.
+3. **Evaluation Orchestrator:** Schedules and coordinates test execution.
+4. **Application Adapters:** Communicate with KODI and other AI applications through APIs or SDKs.
+5. **Metric Engine:** Calculates deterministic and model-assisted metrics.
+6. **Result Store:** Stores test cases, run metadata, scores, traces, and comparison data.
+7. **Artifact Storage:** Stores larger artifacts when required, such as approved test inputs, retrieved passages, or evaluation reports.
+8. **Background Workers:** Execute longer evaluation runs without blocking API requests.
+9. **Authentication and Authorization:** Controls access to projects, datasets, runs, and secrets.
+10. **Observability:** Captures platform errors, job states, execution timing, and operational logs.
+
+## 9.2 Example Architecture Diagram
+
+```text
+                +---------------------------+
+                |       K-ARES UI            |
+                | Dashboard / Datasets /     |
+                | Runs / Comparisons         |
+                +-------------+-------------+
+                              |
+                              v
+                +---------------------------+
+                |       Backend API         |
+                | Auth / Projects / Runs    |
+                +-------------+-------------+
+                              |
+                              v
+                +---------------------------+
+                |  Evaluation Orchestrator   |
+                +-------------+-------------+
+                              |
+               +--------------+--------------+
+               |                             |
+               v                             v
+    +----------------------+      +----------------------+
+    | Application Adapters |      | Background Workers   |
+    | KODI / Other AI Apps |      | Parallel Test Runs   |
+    +----------+-----------+      +-----------+----------+
+               |                              |
+               v                              |
+    +----------------------+                  |
+    | Registered AI Apps   |<-----------------+
+    | KODI / Agents / APIs |
+    +----------------------+
+                             
+                +---------------------------+
+                |       Metric Engine        |
+                | Rules / RAG / Agent / LLM  |
+                | Judge Evaluators           |
+                +-------------+-------------+
+                              |
+                              v
+                +---------------------------+
+                |  Results and Artifact      |
+                |  Storage                   |
+                +-------------+-------------+
+                              |
+                              v
+                +---------------------------+
+                | Reports / Comparisons /    |
+                | Regression Decisions       |
+                +---------------------------+
+```
+
+The diagram represents logical components, not necessarily separate deployable services. The first implementation can run as a modular backend with a worker process and a shared database.
+
+## 9.3 Suggested Technology Stack
+
+The following is a proposed stack, not a requirement to adopt every component.
+
+| Component | Suggested technology | Reason |
+|---|---|---|
+| Frontend | React with TypeScript | Flexible dashboard and reusable UI components |
+| Backend API | FastAPI | Python ecosystem and straightforward API development |
+| Evaluation logic | Python | Good support for AI evaluation and data processing |
+| Database | PostgreSQL | Relational storage for applications, datasets, and runs |
+| Background jobs | Celery with Redis, or a simpler job queue initially | Executes longer evaluations asynchronously |
+| Artifact storage | Cloud object storage or an existing approved storage service | Stores large artifacts and reports |
+| Metrics and charts | Frontend charting library | Visualizes score trends and performance |
+| Authentication | Existing Ksquare identity provider where available | Centralized access control |
+| Packaging | Docker | Consistent development and deployment |
+| Testing | Pytest and frontend test tooling | Automated regression and component tests |
+| CI/CD | Existing organizational pipeline | Automated checks and controlled releases |
+
+Avoid adding a message broker, cache, vector database, or separate microservice unless a concrete requirement justifies it.
+
+---
+
+# 10. Data Model
+
+The database should maintain traceability between an application, its configuration, the dataset used, and the results produced.
+
+## 10.1 Core Entities
+
+### Application
+
+Represents a registered AI application.
+
+Suggested fields:
+
+- `id`
+- `name`
+- `description`
+- `application_type`
+- `owner`
+- `environment`
+- `created_at`
+- `updated_at`
+
+### ApplicationVersion
+
+Represents a version or configuration snapshot of an application.
+
+Suggested fields:
+
+- `id`
+- `application_id`
+- `version_label`
+- `code_revision`
+- `model_name`
+- `prompt_version`
+- `configuration_hash`
+- `created_at`
+
+Sensitive credentials should not be included in the version snapshot.
+
+### Dataset
+
+Represents a logical evaluation dataset.
+
+Suggested fields:
+
+- `id`
+- `name`
+- `description`
+- `application_type`
+- `owner`
+- `created_at`
+
+### DatasetVersion
+
+Represents an immutable version of a dataset.
+
+Suggested fields:
+
+- `id`
+- `dataset_id`
+- `version_number`
+- `created_at`
+- `created_by`
+- `content_hash`
+
+### TestCase
+
+Represents a single evaluation example.
+
+Suggested fields:
+
+- `id`
+- `dataset_version_id`
+- `input_payload`
+- `expected_output`
+- `reference_evidence`
+- `category`
+- `tags`
+- `evaluation_config`
+
+### EvaluationRun
+
+Represents one execution of a dataset against an application version.
+
+Suggested fields:
+
+- `id`
+- `application_id`
+- `application_version_id`
+- `dataset_version_id`
+- `status`
+- `started_at`
+- `completed_at`
+- `triggered_by`
+- `configuration_snapshot`
+- `summary_metrics`
+
+### TestResult
+
+Represents the result for one test case in a run.
+
+Suggested fields:
+
+- `id`
+- `evaluation_run_id`
+- `test_case_id`
+- `status`
+- `actual_output`
+- `latency_ms`
+- `input_tokens`
+- `output_tokens`
+- `estimated_cost`
+- `error_type`
+- `error_message`
+
+### MetricResult
+
+Represents an individual metric result.
+
+Suggested fields:
+
+- `id`
+- `test_result_id`
+- `metric_name`
+- `score`
+- `threshold`
+- `passed`
+- `explanation`
+- `evaluator_version`
+
+### Trace or Artifact Reference
+
+Stores or references execution details such as retrieved document IDs, tool calls, judge outputs, or diagnostic artifacts.
+
+Large data should be stored separately when appropriate, with access controls and retention policies.
+
+## 10.2 Data Integrity Requirements
+
+- Every run must reference an exact dataset version.
+- Every run must reference a recorded application version or configuration snapshot.
+- Every metric result must identify the metric and evaluator version.
+- Failed and cancelled runs must remain distinguishable from completed runs.
+- Partial results should not be confused with complete evaluations.
+- Sensitive information must be protected by access controls and retention rules.
+- Historical results should remain interpretable after the application changes.
+
+---
+
+# 11. Application Integration Strategy
+
+K-ARES should not require every project to be rewritten to support evaluation.
+
+Instead, it should provide a small, documented integration contract.
+
+## 11.1 Integration Option A: HTTP API
+
+An application exposes an approved endpoint that accepts an evaluation input and returns its output.
+
+K-ARES sends requests, records responses, and calculates metrics.
+
+Advantages:
+
+- Works across languages and frameworks.
+- Keeps the evaluated application independent.
+- Suitable for remote or containerized deployments.
+
+Considerations:
+
+- Authentication and authorization must be configured.
+- Timeouts and rate limits must be handled.
+- Evaluation endpoints should be isolated from production workloads where possible.
+
+## 11.2 Integration Option B: Python SDK
+
+A reusable Python SDK can simplify integration for Python applications.
+
+Possible responsibilities:
+
+- Register application metadata.
+- Submit evaluation inputs.
+- Return structured outputs.
+- Capture latency and token usage when available.
+- Provide optional hooks for retrieving traces and citations.
+
+The SDK should remain lightweight. Metric calculation and result persistence should primarily remain within K-ARES so that all projects use consistent evaluation logic.
+
+## 11.3 Integration Option C: Adapter Interface
+
+Define a common interface that each application adapter implements.
+
+Example conceptual interface:
+
+```python
+class ApplicationAdapter:
+    def execute(self, test_input, config):
+        """Execute one test case and return a structured result."""
+        raise NotImplementedError
+
+    def health_check(self):
+        """Check whether the application is reachable."""
+        raise NotImplementedError
+```
+
+The returned result should use a documented structure containing the answer, execution metadata, errors, and any available application-specific details.
+
+The actual implementation should use appropriate typing, error handling, and validation.
+
+---
+
+# 12. KODI Integration Design
+
+KODI is a strong first integration because it contains multiple components that can be evaluated independently: document ingestion, retrieval, answer generation, citations, and chat behavior.
+
+## 12.1 Evaluation Areas
+
+### A. Retrieval Pipeline
+
+Evaluate whether KODI retrieves the correct documents and chunks for a given question.
+
+Capture, where available:
+
+- Query.
+- Retrieved document IDs.
+- Retrieved chunk IDs.
+- Ranking scores.
+- Retrieval mode.
+- Number of retrieved chunks.
+- Retrieval latency.
+
+Use labeled relevant passages to calculate Precision@K, Recall@K, MRR, and NDCG@K.
+
+### B. Answer Generation
+
+Evaluate whether the generated answer is correct, complete, relevant, and appropriately grounded in the retrieved evidence.
+
+Capture:
+
+- User question.
+- Generated answer.
+- Retrieved context.
+- Model and prompt configuration.
+- Generation latency.
+- Token usage, if available.
+
+### C. Citation Evaluation
+
+Check whether each citation points to a valid source and whether that source supports the associated claim.
+
+Where KODI supports passage-level citations, verify the cited passage rather than checking only whether a document name appears.
+
+### D. Document Ingestion
+
+Evaluate whether supported documents can be uploaded, parsed, chunked, embedded, and indexed successfully.
+
+Useful operational metrics include:
+
+- Ingestion success rate.
+- Parsing failure rate.
+- Time to process a document.
+- Number of chunks generated.
+- Number of empty or malformed chunks.
+- Embedding and indexing failures.
+
+Document ingestion metrics should be reported separately from answer quality metrics.
+
+### E. Numerical and Tabular Questions
+
+For spreadsheets and tables, use questions with deterministic expected answers.
+
+Examples include:
+
+- Highest-selling product.
+- Total sales by region.
+- Average monthly revenue.
+- Difference between two reporting periods.
+- Row count or category count.
+
+The test definition must specify the relevant period, aggregation, and units to avoid ambiguous grading.
+
+### F. Organization and Document Isolation
+
+Create tests that attempt to retrieve documents outside the current user's permitted organization or scope.
+
+The expected outcome should be denial or exclusion of unauthorized information. These tests should run in an isolated test environment with synthetic data.
+
+## 12.2 Required KODI Adapter Output
+
+Where possible, the adapter should return a structured result similar to:
+
+```json
+{
+  "answer": "The reported revenue was 125000.",
+  "citations": [
+    {
+      "document_id": "test-document-01",
+      "chunk_id": "test-chunk-05",
+      "text": "Reported revenue: 125000."
+    }
+  ],
+  "retrieved_chunks": [],
+  "latency_ms": 840,
+  "usage": {
+    "input_tokens": 1200,
+    "output_tokens": 80
+  },
+  "metadata": {
+    "model": "configured-model",
+    "retrieval_mode": "hybrid"
+  }
+}
+```
+
+This is an illustrative schema. Field names should be aligned with the actual KODI API and its supported metadata. Token counts, citations, and retrieval details should be marked unavailable when they cannot be obtained reliably rather than fabricated.
+
+## 12.3 Example KODI Evaluation Flow
+
+1. Load a versioned evaluation dataset.
+2. Select the KODI endpoint and application configuration.
+3. Execute the test questions.
+4. Capture answers, citations, retrieval results, latency, and usage metadata.
+5. Calculate deterministic metrics.
+6. Run model-assisted evaluations where required.
+7. Identify failed cases.
+8. Compare the results with the baseline run.
+9. Export a report.
+10. Repeat after modifying retrieval, chunking, prompts, or model configuration.
+
+---
+
+# 13. AI Agent Integration Design
+
+AI agents require evaluation of both the final output and the steps taken to produce it.
+
+A correct final answer does not necessarily mean the agent followed the required workflow. Conversely, a tool call can succeed while the overall task remains incomplete.
+
+## 13.1 Evaluation Areas
+
+### A. Final Task Outcome
+
+Define what constitutes success for each task. Prefer explicit checks such as a database record being created or a report being generated with required fields.
+
+### B. Tool Selection and Arguments
+
+Record which tool was called, the arguments supplied, the result returned, and whether the call was permitted.
+
+### C. Execution Trace
+
+Where available, record the ordered sequence of relevant actions and outcomes.
+
+Avoid collecting hidden reasoning or internal chain-of-thought. Evaluation should focus on observable inputs, outputs, tool calls, and state changes.
+
+### D. Error Handling
+
+Test timeouts, invalid responses, unavailable tools, rate limits, and missing data.
+
+Check whether the agent recovers appropriately, reports failure clearly, or stops safely.
+
+### E. Safety and Authorization
+
+Test whether the agent respects permissions and refuses unauthorized actions.
+
+High-impact actions should use explicit authorization, approval steps, or sandboxed test environments as appropriate.
+
+## 13.2 Example Agent Test
+
+**Task:** Generate a sales summary from an approved test database.
+
+Expected behavior:
+
+1. Select the appropriate data retrieval tool.
+2. Query the correct reporting period.
+3. Calculate the required totals.
+4. Validate the returned data.
+5. Generate the summary.
+6. Include the required figures and reporting period.
+7. Avoid accessing unauthorized records.
+
+The evaluator should validate the result against the source data and inspect the recorded tool calls for prohibited actions.
+
+---
+
+# 14. Dashboard and User Interface
+
+The interface should prioritize quick understanding of evaluation results. Users should be able to identify the most important failures without navigating through numerous screens.
+
+## 14.1 Overview Dashboard
+
+Display:
+
+- Registered applications.
+- Latest evaluation status for each application.
+- Overall quality scores.
+- Critical security failures.
+- Latency and error-rate trends.
+- Recent evaluation runs.
+- Applications with detected regressions.
+
+Avoid combining every metric into one opaque score. If an overall score is provided, show its formula and component metrics.
+
+## 14.2 Application Details Page
+
+Each application should have:
+
+- Application metadata.
+- Version history.
+- Supported evaluation suites.
+- Dataset associations.
+- Latest run.
+- Metric trends.
+- Recent failures.
+- Configuration information.
+
+## 14.3 Dataset Page
+
+Users should be able to:
+
+- Create a dataset.
+- Upload or enter test cases.
+- Validate the dataset schema.
+- Tag test cases.
+- Filter by category.
+- View expected answers and evidence.
+- Create a new version.
+- Inspect validation errors.
+
+## 14.4 Evaluation Run Page
+
+Display:
+
+- Run status.
+- Application and version.
+- Dataset and version.
+- Start and completion times.
+- Progress and test counts.
+- Aggregate metrics.
+- Latency and cost summaries.
+- Failed test cases.
+- Comparison with a selected baseline.
+
+## 14.5 Test-Case Details Page
+
+For an individual test case, display:
+
+- Input.
+- Expected output.
+- Actual output.
+- Retrieved evidence, where applicable.
+- Citations.
+- Tool calls, where applicable.
+- Individual metric scores.
+- Error details.
+- Execution timing.
+- Evaluation explanations.
+- Links to relevant run and application-version information.
+
+## 14.6 Design Principles
+
+- Keep the interface clean and information-dense without unnecessary visual clutter.
+- Use clear status labels such as Passed, Failed, Running, and Incomplete.
+- Highlight critical failures without hiding ordinary metric results.
+- Allow filtering and sorting by score, category, latency, and failure type.
+- Display historical trends.
+- Make metric definitions accessible from the interface.
+- Provide useful empty states and actionable error messages.
+- Support export of evaluation results.
+
+---
+
+# 15. Regression Testing and Release Gates
+
+A major benefit of K-ARES is its ability to detect quality regressions after changes.
+
+## 15.1 Baseline Evaluation
+
+Before changing a model, prompt, retrieval strategy, or other important configuration, execute a baseline evaluation and save the result.
+
+Record:
+
+- Application version.
+- Dataset version.
+- Model and prompt configuration.
+- Retrieval configuration.
+- Metric values.
+- Failed cases.
+- Execution timing.
+- Estimated cost.
+
+## 15.2 Candidate Evaluation
+
+After making a change, execute the same dataset against the candidate version using equivalent conditions.
+
+The comparison should identify:
+
+- Quality improvements.
+- Quality regressions.
+- New failures.
+- Resolved failures.
+- Latency changes.
+- Cost changes.
+- Security violations.
+
+## 15.3 Release-Gate Rules
+
+Release gates should be configurable by application.
+
+Illustrative rules:
+
+- No critical access-control failures.
+- No unauthorized tool actions in the security suite.
+- Answer correctness remains above the defined threshold.
+- Retrieval recall does not degrade beyond an agreed tolerance.
+- P95 latency remains within the service objective.
+- Error rate stays below the configured limit.
+- Estimated cost remains within the budget.
+
+The thresholds should be established from baseline measurements, business requirements, and acceptable risk—not chosen arbitrarily.
+
+A release gate should distinguish between a completed run that failed a quality threshold and a run that could not complete because the application or evaluator was unavailable.
+
+---
+
+# 16. Security, Privacy, and Governance
+
+Because K-ARES may process prompts, answers, document excerpts, and tool traces, security must be part of the design from the beginning.
+
+## 16.1 Authentication and Authorization
+
+- Authenticate all users and service integrations.
+- Enforce role-based or project-based permissions.
+- Restrict access to applications, datasets, results, and artifacts.
+- Verify that users cannot view results belonging to unauthorized teams.
+- Use least-privilege credentials for integrations.
+
+## 16.2 Secret Management
+
+- Never hardcode API keys or passwords.
+- Use environment configuration or an approved secrets manager.
+- Mask secrets in logs and error messages.
+- Avoid displaying secret values in the UI.
+- Rotate credentials according to organizational policy.
+
+## 16.3 Sensitive Data
+
+- Use synthetic or anonymized data where practical.
+- Minimize stored prompt and response content.
+- Apply retention policies.
+- Restrict access to potentially sensitive evaluation traces.
+- Avoid sending sensitive test data to external LLM judges without explicit approval.
+
+## 16.4 Prompt Injection
+
+Evaluation datasets should include controlled attempts to override system instructions or extract unauthorized information.
+
+The system should evaluate whether the target application follows its documented security boundaries.
+
+K-ARES itself must also treat evaluation inputs, retrieved documents, and application outputs as untrusted content.
+
+## 16.5 Auditability
+
+Record:
+
+- Who initiated a run.
+- Which application and dataset versions were used.
+- Which configuration was active.
+- When the run occurred.
+- Which evaluators and metric versions were used.
+- Whether a release gate passed.
+- Who changed relevant configurations.
+
+## 16.6 Evaluation Isolation
+
+Run security tests against dedicated test environments whenever possible. Avoid executing potentially destructive agent actions against production systems.
+
+---
+
+# 17. Implementation Roadmap
+
+Implementation should proceed in phases, with each phase delivering a usable and verifiable result.
+
+## Phase 1: Requirements and Evaluation Design
+
+**Goal:** Define the initial platform contract.
+
+Activities:
+
+- Confirm target users and use cases.
+- Finalize the first KODI evaluation dataset.
+- Select the initial agent test scenario.
+- Define the application adapter contract.
+- Define initial metrics and their calculation methods.
+- Establish data retention and access-control requirements.
+- Define success criteria for the MVP.
+
+Deliverables:
+
+- Requirements document.
+- Evaluation dataset specification.
+- Metric definitions.
+- API and adapter contract.
+- MVP acceptance criteria.
+
+Validation:
+
+- Stakeholders agree on the metrics and test cases.
+- Expected answers and source evidence are available for the initial dataset.
+- Each selected metric has a defined interpretation.
+
+## Phase 2: Evaluation Engine
+
+**Goal:** Execute repeatable evaluations without requiring a complete dashboard.
+
+Activities:
+
+- Implement application registration at the backend level.
+- Implement dataset loading and validation.
+- Implement test execution.
+- Add timeouts, error handling, and bounded concurrency.
+- Capture outputs and execution metadata.
+- Implement initial deterministic metrics.
+- Persist run and test-result records.
+
+Deliverables:
+
+- Working evaluation engine.
+- Initial KODI adapter.
+- Versioned dataset support.
+- Stored evaluation results.
+- Automated backend tests.
+
+Validation:
+
+- A known dataset runs end to end.
+- Test-case counts match the dataset.
+- Errors are reported accurately.
+- Repeated runs can be compared.
+- Incomplete runs are not incorrectly marked as successful.
+
+## Phase 3: Dashboard and Reporting
+
+**Goal:** Make evaluation results accessible to developers and managers.
+
+Activities:
+
+- Build the overview dashboard.
+- Add application and dataset pages.
+- Add evaluation-run pages.
+- Display per-test-case results.
+- Implement metric charts.
+- Implement run comparisons.
+- Add report export.
+
+Deliverables:
+
+- Usable web interface.
+- Metric visualizations.
+- Failure-detail views.
+- Exportable evaluation reports.
+
+Validation:
+
+- Users can run or inspect evaluations without manually querying the database.
+- Failed cases are easy to identify.
+- Displayed metrics match stored results.
+- Historical results remain available.
+
+## Phase 4: Advanced RAG and Agent Evaluation
+
+**Goal:** Expand beyond basic correctness and latency.
+
+Activities:
+
+- Add retrieval relevance metrics.
+- Add groundedness and citation evaluation.
+- Add agent tool-use and task-completion metrics.
+- Add LLM-as-a-judge support.
+- Calibrate model-assisted evaluation against human-reviewed samples.
+- Add security and access-control test suites.
+
+Deliverables:
+
+- RAG-specific evaluation suite.
+- Agent evaluation suite.
+- Judge configuration and result tracking.
+- Security evaluation suite.
+
+Validation:
+
+- Metrics are tested against known examples.
+- Judge outputs follow a validated schema.
+- Human-reviewed cases are used to check judge reliability.
+- Critical security failures remain visible independently of aggregate scores.
+
+## Phase 5: Regression Gates and Operational Readiness
+
+**Goal:** Make evaluations useful in the development lifecycle.
+
+Activities:
+
+- Add configurable thresholds.
+- Add baseline selection.
+- Add candidate-versus-baseline comparison.
+- Add CI/CD integration where appropriate.
+- Add run scheduling if needed.
+- Improve permissions, retention, and operational monitoring.
+
+Deliverables:
+
+- Regression detection.
+- Configurable quality gates.
+- CI/CD integration.
+- Operational documentation.
+
+Validation:
+
+- An intentional regression is detected.
+- A passing run satisfies the configured rules.
+- Failed or incomplete runs are handled correctly.
+- Permissions and secret-handling tests pass.
+
+## Phase 6: Expansion
+
+**Goal:** Integrate additional Ksquare applications.
+
+Activities:
+
+- Add adapters for more AI applications.
+- Improve multi-team support.
+- Add additional evaluation datasets.
+- Introduce advanced reporting and trend analysis.
+- Add production evaluation capabilities only when appropriate governance is in place.
+
+Deliverables:
+
+- Reusable integration framework.
+- Additional application adapters.
+- Expanded evaluation catalog.
+
+---
+
+# 18. Testing Strategy
+
+K-ARES itself must be tested as carefully as the AI applications it evaluates.
+
+## 18.1 Unit Tests
+
+Test individual components:
+
+- Metric calculations.
+- Dataset validation.
+- Schema validation.
+- Result aggregation.
+- Threshold comparisons.
+- Cost calculations.
+- Error classification.
+- Configuration parsing.
+
+## 18.2 Integration Tests
+
+Test interactions between:
+
+- Backend API and database.
+- Orchestrator and workers.
+- Workers and application adapters.
+- Metric engine and result storage.
+- Dashboard and backend APIs.
+- Report generation and stored results.
+
+## 18.3 End-to-End Tests
+
+Test a complete workflow:
+
+1. Register an application.
+2. Create or upload a dataset.
+3. Start an evaluation run.
+4. Wait for completion.
+5. View aggregate metrics.
+6. Open a failed test case.
+7. Compare the run with a baseline.
+8. Export a report.
+
+## 18.4 Failure-Handling Tests
+
+Simulate:
+
+- Application unavailable.
+- Request timeout.
+- Invalid response schema.
+- Rate limit.
+- Worker failure.
+- Database connection failure.
+- Evaluator failure.
+- Partially completed run.
+- Cancelled run.
+- Missing token-usage data.
+
+The platform should clearly distinguish target-application failures from failures in the evaluation infrastructure.
+
+## 18.5 Metric Validation Tests
+
+Create small datasets with known outcomes.
+
+For example, if four test cases have known pass/fail outcomes and three pass, the pass rate must be 75%.
+
+For retrieval metrics, use deliberately constructed rankings with known relevant results and verify the calculations.
+
+For cost estimates, test known token counts against a versioned pricing configuration.
+
+## 18.6 Load and Performance Tests
+
+Measure:
+
+- Evaluation startup time.
+- Requests executed per minute.
+- Queue wait time.
+- Worker utilization.
+- Database load.
+- Dashboard response time.
+- Behavior under concurrency.
+- Recovery after worker failure.
+
+Use representative workloads rather than arbitrary maximum loads.
+
+---
+
+# 19. Success Criteria
+
+Success should be measured using explicit acceptance criteria.
+
+## 19.1 MVP Acceptance Criteria
+
+The MVP should be considered ready for controlled internal use when:
+
+- At least one application, KODI, is integrated successfully.
+- A versioned evaluation dataset can be executed end to end.
+- Test results and metric scores are stored reliably.
+- Individual failures can be inspected.
+- Latency and error rates are displayed.
+- Evaluation runs can be compared.
+- Reports can be exported.
+- Evaluation errors are distinguishable from target-application errors.
+- Basic authentication and access control are implemented.
+- The system passes its core unit, integration, and end-to-end tests.
+
+## 19.2 Quality Improvement Criteria
+
+After collecting a reliable baseline, teams can set targets for:
+
+- Improved retrieval recall.
+- Improved answer correctness.
+- Better citation precision.
+- Reduced unsupported answers.
+- Lower P95 latency.
+- Lower error rates.
+- Reduced cost per successful task.
+- Fewer critical security failures.
+
+Targets should be defined per application and use case.
+
+A single universal target would be misleading because a fast classification service and a multi-step research agent have different requirements.
+
+## 19.3 Operational Criteria
+
+Track:
+
+- Evaluation-run completion rate.
+- Evaluator failure rate.
+- Average evaluation duration.
+- Cost of evaluation.
+- Dataset maintenance effort.
+- Percentage of failures reviewed.
+- Number of regressions caught before release.
+
+---
+
+# 20. Risks and Mitigations
+
+## Risk 1: Unreliable LLM Judgments
+
+**Problem:** The judge may incorrectly score a response or favor certain writing styles.
+
+**Mitigation:**
+
+- Use deterministic checks wherever possible.
+- Define explicit scoring rubrics.
+- Calibrate against human-reviewed examples.
+- Record judge model and version.
+- Re-evaluate a sample periodically.
+- Avoid treating judge scores as unquestionable truth.
+
+## Risk 2: Poor Evaluation Datasets
+
+**Problem:** A system may score well on a narrow or unrepresentative dataset while failing in real use.
+
+**Mitigation:**
+
+- Include realistic, diverse cases.
+- Add difficult and negative examples.
+- Version datasets.
+- Maintain a held-out test set.
+- Review coverage with application owners.
+- Expand the dataset as new failure modes are discovered.
+
+## Risk 3: Excessive Evaluation Cost
+
+**Problem:** Repeated model calls and LLM-based judging may become expensive.
+
+**Mitigation:**
+
+- Start with deterministic metrics.
+- Run expensive judges only when necessary.
+- Support sampling for exploratory runs.
+- Use smaller test suites during development and fuller suites before release.
+- Track evaluation cost separately from application cost.
+- Cache reusable judgments only when the input and evaluation configuration are identical.
+
+## Risk 4: Evaluation Latency
+
+**Problem:** Large test suites may take too long to complete.
+
+**Mitigation:**
+
+- Use background workers.
+- Apply bounded concurrency.
+- Support test selection and filtering.
+- Separate quick checks from full evaluation suites.
+- Display queue and execution status.
+
+## Risk 5: Misleading Aggregate Scores
+
+**Problem:** A high overall score can hide a severe failure.
+
+**Mitigation:**
+
+- Display individual metrics.
+- Show critical security failures separately.
+- Configure mandatory release gates.
+- Document the formula behind any aggregate score.
+- Avoid allowing strong performance in one category to compensate for critical failure in another.
+
+## Risk 6: Application-Specific Integration Complexity
+
+**Problem:** Different AI applications expose different response formats and telemetry.
+
+**Mitigation:**
+
+- Define a stable adapter contract.
+- Use optional capabilities for retrieval traces, citations, tool calls, and token usage.
+- Validate adapter outputs.
+- Keep application-specific logic outside the central metric engine where possible.
+
+## Risk 7: Sensitive Information Exposure
+
+**Problem:** Evaluation inputs, outputs, and traces may contain confidential data.
+
+**Mitigation:**
+
+- Enforce access control.
+- Minimize stored content.
+- Mask secrets.
+- Define retention policies.
+- Use approved test data.
+- Restrict external judge access.
+- Audit access to sensitive artifacts.
+
+## Risk 8: Model and Pricing Changes
+
+**Problem:** Provider changes may affect quality, latency, and cost.
+
+**Mitigation:**
+
+- Record model identifiers and configuration snapshots.
+- Record the pricing configuration used for each estimate.
+- Re-run evaluations after important provider changes.
+- Label cost estimates with their assumptions.
+
+---
+
+# 21. Suggested API Design
+
+The API should be small and stable in the first release.
+
+The following endpoints are illustrative and should be adjusted to the final backend architecture.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/v1/applications` | Register an application |
+| GET | `/api/v1/applications` | List applications |
+| GET | `/api/v1/applications/{id}` | Retrieve application details |
+| POST | `/api/v1/datasets` | Create a dataset |
+| GET | `/api/v1/datasets` | List datasets |
+| POST | `/api/v1/datasets/{id}/versions` | Create a dataset version |
+| POST | `/api/v1/evaluations` | Start an evaluation run |
+| GET | `/api/v1/evaluations/{id}` | Retrieve run status and summary |
+| GET | `/api/v1/evaluations/{id}/results` | Retrieve test-case results |
+| GET | `/api/v1/evaluations/{id}/metrics` | Retrieve metric summaries |
+| GET | `/api/v1/evaluations/compare` | Compare selected evaluation runs |
+| POST | `/api/v1/evaluations/{id}/cancel` | Request cancellation |
+| GET | `/api/v1/reports/{id}` | Retrieve or download a report |
+
+Long-running evaluation requests should return a run identifier rather than keeping the HTTP request open until every test case finishes.
+
+The API should include input validation, authentication, authorization, pagination, structured errors, and rate limits where appropriate.
+
+---
+
+# 22. Reporting and Result Interpretation
+
+Each evaluation report should contain:
+
+## 22.1 Run Metadata
+
+- Application name and version.
+- Dataset name and version.
+- Run identifier.
+- Initiating user or automation.
+- Start and completion time.
+- Evaluator versions.
+- Model and configuration information.
+
+## 22.2 Summary Metrics
+
+- Number of test cases.
+- Number completed, failed, skipped, or cancelled.
+- Metric scores.
+- Latency percentiles.
+- Error rate.
+- Token usage and estimated cost, when available.
+- Threshold and release-gate results.
+
+## 22.3 Failure Breakdown
+
+Group failures by category, such as:
+
+- Retrieval.
+- Answer correctness.
+- Groundedness.
+- Citation quality.
+- Structured output.
+- Tool execution.
+- Security.
+- Timeout.
+- Evaluator or infrastructure failure.
+
+## 22.4 Recommendations
+
+Recommendations should be tied to observed evidence.
+
+For example:
+
+- Low retrieval recall may justify investigating query processing, chunking, or retrieval settings.
+- High retrieval recall but low groundedness may justify investigating generation prompts or context handling.
+- Correct answers with poor citation precision may justify improving citation generation or validation.
+- High P95 latency may justify examining slow model calls, retrieval operations, or external dependencies.
+
+These are investigation directions, not automatic proof of the root cause.
+
+---
+
+# 23. Future Enhancements
+
+Once the MVP is stable, K-ARES could be extended in the following directions.
+
+## 23.1 Continuous Evaluation
+
+Automatically execute a small test suite when relevant code, prompts, or configurations change.
+
+## 23.2 Production Trace Evaluation
+
+Sample approved production traces and evaluate them against defined quality and reliability criteria, with suitable privacy and retention controls.
+
+## 23.3 Failure Clustering
+
+Group similar failures to identify recurring problems across many test cases.
+
+## 23.4 Evaluation Recommendations
+
+Use observed metric patterns to suggest which components should be investigated first.
+
+## 23.5 Human Review Workflow
+
+Allow reviewers to label incorrect judgments, annotate failures, and improve the evaluation dataset.
+
+## 23.6 Model Comparison
+
+Compare approved models using the same datasets and equivalent evaluation conditions.
+
+Consider quality, latency, cost, reliability, and security together rather than selecting a model solely by response quality.
+
+## 23.7 Additional Integrations
+
+Extend the platform to support other Ksquare AI solutions through the common adapter interface.
+
+## 23.8 AI Governance
+
+Add policy-specific checks, audit reporting, evaluation evidence, and controlled release approvals where required by organizational governance.
+
+---
+
+# 24. Recommended Development Priorities
+
+To keep the project practical and avoid unnecessary complexity, the following order is recommended:
+
+1. Define a small, reliable evaluation dataset for KODI.
+2. Define the application adapter contract.
+3. Build the backend evaluation engine.
+4. Implement deterministic metrics first.
+5. Store versioned runs and results.
+6. Build the dashboard and detailed result views.
+7. Add baseline comparison.
+8. Add groundedness and citation evaluation.
+9. Integrate an AI agent.
+10. Add security tests and configurable release gates.
+11. Add CI/CD automation.
+12. Expand to more applications only after the core workflow is reliable.
+
+The most important early milestone is not a visually impressive dashboard. It is a trustworthy evaluation pipeline that can execute known tests, calculate correct metrics, preserve results, and explain failures.
+
+---
+
+# 25. Final Recommendation
+
+Ksquare K-ARES should be developed as a modular, shared AI evaluation platform rather than as a collection of unrelated test scripts.
+
+Its initial value will come from three capabilities:
+
+1. **Consistent measurement:** Every supported application is evaluated using clearly defined metrics and versioned datasets.
+2. **Actionable diagnostics:** Developers can trace a poor score to specific test cases and observable execution details.
+3. **Regression prevention:** Teams can compare changes and identify quality, performance, cost, or security regressions before release.
+
+KODI is a suitable first integration because it provides a practical environment for evaluating retrieval, answer generation, citations, document processing, and access control. A tool-using AI agent can be the second integration to validate that the framework is reusable beyond RAG.
+
+The recommended MVP is deliberately limited: one web interface, one backend evaluation engine, one database, background execution where needed, a KODI adapter, versioned datasets, core metrics, detailed test results, and baseline comparisons.
+
+After this foundation is validated, advanced judging, additional agents, continuous evaluation, and broader integrations can be added incrementally.
+
+**The long-term objective is to make AI quality measurable, failures explainable, and improvements verifiable across Ksquare's AI applications.**

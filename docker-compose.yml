@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kaers
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kaers-dev-password}
+      POSTGRES_DB: kaers
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kaers -d kaers"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://kaers:${POSTGRES_PASSWORD:-kaers-dev-password}@db:5432/kaers
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kaers.dev}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-kaers-admin-change-me}
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
+    depends_on:
+      db:
+        condition: service_healthy
+    # Apply migrations, seed the initial admin, then serve.
+    command: >
+      sh -c "alembic upgrade head && python -m app.db.seed &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "${API_PORT:-8001}:8000"
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-5173}:80"
+
+volumes:
+  pgdata:
