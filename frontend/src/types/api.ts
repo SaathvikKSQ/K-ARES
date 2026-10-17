@@ -158,9 +158,119 @@ export interface SampleDatasetInfo {
   application_type: ApplicationType;
   case_count: number;
 }
-export interface Page<T> {
-  items: T[];
-  page: number;
-  page_size: number;
-  total: number;
+
+// ---- Phase 3: Evaluations ----
+
+export type MetricProvenance = "measured" | "estimated" | "model_judged";
+export type MetricValueKind = "score" | "rate" | "ms" | "tokens" | "currency" | "count";
+export type MetricStatus = "computed" | "unavailable";
+export type RunStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
+
+export interface MetricSpec {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  provenance: MetricProvenance;
+  value_kind: MetricValueKind;
+  scope: "case" | "run";
+  application_types: string[];
+  required_fields: string[];
+  capabilities_required: string[];
+  config_schema: Record<string, unknown>;
+}
+
+export interface MetricValue {
+  evaluator_id: string;
+  evaluator_version: string;
+  provenance: MetricProvenance;
+  value_kind: MetricValueKind;
+  status: MetricStatus;
+  score: number | null;
+  unavailable_reason: string | null;
+  explanation: string | null;
+  details: Record<string, unknown>;
+}
+
+export interface RunConfigInput {
+  concurrency: number;
+  timeout_ms: number;
+  max_retries: number;
+  repeats: number;
+  rate_limit_rps: number;
+}
+
+export interface RunProgress {
+  total?: number;
+  completed?: number;
+  failed?: number;
+  skipped?: number;
+}
+
+export interface RunSummary {
+  id: string;
+  application_id: string;
+  dataset_id: string;
+  dataset_version_id: string;
+  status: RunStatus;
+  progress: RunProgress;
+  metric_ids: string[];
+  triggered_by: string | null;
+  created_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  duration_ms: number | null;
+}
+
+export interface CostSummary {
+  currency: string;
+  pricing_version?: string;
+  total_usd?: number | null;
+  per_case_usd?: number | null;
+}
+
+export interface RunDetail extends RunSummary {
+  run_config: RunConfigInput;
+  configuration_snapshot: Record<string, unknown>;
+  summary_metrics: MetricValue[];
+  error_summary: Record<string, unknown> | null;
+  model_metadata: Record<string, unknown> | null;
+  cost_summary: CostSummary | null;
+}
+
+export interface RunCreateInput {
+  application_id: string;
+  dataset_id: string;
+  dataset_version_id?: string | null;
+  metric_ids: string[];
+  run_config?: Partial<RunConfigInput>;
+}
+
+export interface ValidateConfigInput {
+  application_id: string;
+  dataset_id: string;
+  dataset_version_id?: string | null;
+  metric_ids: string[];
+}
+
+export interface ValidateConfigResult {
+  applicable: string[];
+  inapplicable: { id: string; reason: string }[];
+  estimated_cases: number;
+}
+
+export interface CaseResult {
+  id: string;
+  run_id: string;
+  test_case_id: string;
+  external_id: string | null;
+  repeat_index: number;
+  outcome: string;
+  actual_output: string | null;
+  latency_ms: number | null;
+  ttft_ms: number | null;
+  token_usage: Record<string, number> | null;
+  error_type: string | null;
+  error_message: string | null;
+  metrics: MetricValue[];
 }

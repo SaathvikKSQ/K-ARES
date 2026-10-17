@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     adapter_read_timeout_s: float = 60.0
     adapter_max_response_bytes: int = 5_000_000
 
+    # Run worker (background evaluation execution)
+    run_worker_enabled: bool = True
+    run_poll_interval_s: float = 0.5
+
     # Retention (days)
     retention_days_artifacts: int = 90
     retention_days_exports: int = 7

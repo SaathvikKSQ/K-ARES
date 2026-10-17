@@ -5,7 +5,10 @@ import LoginPage from "./pages/LoginPage";
 import OverviewPage from "./pages/OverviewPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
 import DatasetsPage from "./pages/DatasetsPage";
-import { EvaluationsPage, SecurityPage } from "./pages/PlaceholderPages";
+import EvaluationsPage from "./pages/EvaluationsPage";
+import NewEvaluationPage from "./pages/NewEvaluationPage";
+import RunDetailPage from "./pages/RunDetailPage";
+import { SecurityPage } from "./pages/PlaceholderPages";
 import { useAuth } from "./features/auth/useAuth";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -30,6 +33,8 @@ export default function App() {
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/datasets" element={<DatasetsPage />} />
         <Route path="/evaluations" element={<EvaluationsPage />} />
+        <Route path="/evaluations/new" element={<NewEvaluationPage />} />
+        <Route path="/evaluations/:runId" element={<RunDetailPage />} />
         <Route path="/security" element={<SecurityPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

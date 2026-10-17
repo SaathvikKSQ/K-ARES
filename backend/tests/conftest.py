@@ -16,6 +16,7 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_TMP_DIR / 'test.db'}"
 os.environ["SECRET_KEY"] = "unit-test-secret-key"
 os.environ["ENVIRONMENT"] = "test"
 os.environ["LOG_LEVEL"] = "WARNING"
+os.environ["RUN_WORKER_ENABLED"] = "false"  # tests drive the engine directly
 os.environ["ADMIN_EMAIL"] = "admin@kaers.dev"
 os.environ["ADMIN_PASSWORD"] = "test-admin-password-123"
 os.environ["DATA_DIR"] = str(_TMP_DIR / "data")

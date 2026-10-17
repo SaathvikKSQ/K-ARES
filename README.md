@@ -1,16 +1,16 @@
-# K-AERS — Ksquare AI Evaluation, Reliability & Security Platform
+﻿# K-AERS — Ksquare AI Evaluation, Reliability & Security Platform
 
 Modular platform for evaluating AI applications (RAG, LLM apps, agents) on answer quality,
 retrieval quality, reliability, latency, cost, and security. Specifications live in `specs/`
 (spec-driven development; read `specs/constitution.md` first).
 
-## Status — Phase 1 (Foundation) complete
+## Status — Phase 3 (Evaluation Engine Core) complete
 
-- ✅ Backend: FastAPI + SQLAlchemy 2 + Alembic; health, auth (login/logout/me, roles), settings,
+- âœ… Backend: FastAPI + SQLAlchemy 2 + Alembic; health, auth (login/logout/me, roles), settings,
   JSON logging with secret redaction, request-id middleware, standard error envelope
-- ✅ Full data model (applications, datasets, runs, results) migrated
-- ✅ Frontend: React 18 + TS + Vite shell with routing, layout, login, empty states
-- ✅ Docker Compose: api + postgres + web; ✅ backend pytest (20 tests), ruff clean; vitest
+- âœ… Full data model (applications, datasets, runs, results) migrated
+- âœ… Frontend: React 18 + TS + Vite shell with routing, layout, login, empty states
+- âœ… Docker Compose: api + postgres + web; âœ… backend pytest (20 tests), ruff clean; vitest
 
 ## Quickstart (Docker)
 
@@ -66,4 +66,5 @@ npm run dev                               # http://localhost:5173 (proxies /api 
 ## Roadmap
 
 Phases and acceptance criteria: `specs/implementation/tasks.md` (reports: `specs/implementation/phase-*-report.md`).
-Current status: **Phases 1–2 of 6 done** (foundation + applications/datasets). Phase 3 (evaluation engine core) is next.
+Current status: **Phases 1–3 of 6 done** (foundation, applications/datasets, evaluation
+engine core).

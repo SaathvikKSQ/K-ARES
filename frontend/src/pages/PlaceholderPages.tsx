@@ -1,15 +1,6 @@
 ﻿import { EmptyState } from "./OverviewPage";
 
-/** Placeholder pages for features landing in Phase 3+ (empty states only — no fake data). */
-
-export function EvaluationsPage() {
-  return (
-    <section>
-      <h1 className="mb-4 text-xl font-semibold">Evaluations</h1>
-      <EmptyState title="No evaluation runs yet" hint="The evaluation engine arrives in Phase 3." />
-    </section>
-  );
-}
+/** Placeholder pages for features landing in Phase 4+ (empty states only - no fake data). */
 
 export function SecurityPage() {
   return (
