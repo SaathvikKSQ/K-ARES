@@ -32,6 +32,8 @@ class Settings(BaseSettings):
 
     # Security / auth
     secret_key: str = "insecure-dev-secret-change-me"
+    secret_encryption_key: str | None = None  # Fernet key; falls back to secret_key
+    # Security / auth
     access_token_expire_minutes: int = 720
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
 

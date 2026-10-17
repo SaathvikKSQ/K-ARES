@@ -12,6 +12,7 @@ dependencies = [
     "sqlalchemy>=2.0.30",
     "alembic>=1.13",
     "psycopg[binary]>=3.2",
+    "httpx>=0.27",
     "bcrypt>=4.1",
     "cryptography>=42.0",
     "python-multipart>=0.0.9",
@@ -40,6 +41,10 @@ extend-exclude = ["alembic/versions"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "W"]
 ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic
+
+[tool.ruff.lint.per-file-ignores]
+# Long literal dataset rows in bundled samples are data, not code.
+"app/services/sample_datasets.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

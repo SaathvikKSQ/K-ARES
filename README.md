@@ -65,5 +65,5 @@ npm run dev                               # http://localhost:5173 (proxies /api 
 
 ## Roadmap
 
-Phases and acceptance criteria: `specs/implementation/tasks.md`. Current phase: **1 of 6 done**;
-Phase 2 (applications + datasets) is next.
+Phases and acceptance criteria: `specs/implementation/tasks.md` (reports: `specs/implementation/phase-*-report.md`).
+Current status: **Phases 1–2 of 6 done** (foundation + applications/datasets). Phase 3 (evaluation engine core) is next.

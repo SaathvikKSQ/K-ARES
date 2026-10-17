@@ -1,7 +1,7 @@
-"""K-AERS FastAPI application factory.
+﻿"""K-AERS FastAPI application factory.
 
 Phase 1: health, auth, CORS, request-id middleware, standard error envelope.
-Business routers are added in later phases (applications, datasets, evaluations).
+Phase 2 adds the applications and datasets routers.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, health
+from app.api.routes import applications, auth, datasets, health
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
@@ -55,6 +55,8 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router, prefix="/api/v1")
     app.include_router(auth.router, prefix="/api/v1")
+    app.include_router(applications.router, prefix="/api/v1")
+    app.include_router(datasets.router, prefix="/api/v1")
 
     return app
 

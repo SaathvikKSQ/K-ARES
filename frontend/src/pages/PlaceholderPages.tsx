@@ -1,24 +1,6 @@
-import { EmptyState } from "./OverviewPage";
+﻿import { EmptyState } from "./OverviewPage";
 
-/** Placeholder pages for features landing in Phase 2+ (empty states only — no fake data). */
-
-export function ApplicationsPage() {
-  return (
-    <section>
-      <h1 className="mb-4 text-xl font-semibold">Applications</h1>
-      <EmptyState title="No applications registered" hint="Application registration arrives in Phase 2." />
-    </section>
-  );
-}
-
-export function DatasetsPage() {
-  return (
-    <section>
-      <h1 className="mb-4 text-xl font-semibold">Datasets</h1>
-      <EmptyState title="No datasets yet" hint="Dataset upload and validation arrives in Phase 2." />
-    </section>
-  );
-}
+/** Placeholder pages for features landing in Phase 3+ (empty states only — no fake data). */
 
 export function EvaluationsPage() {
   return (

@@ -23,7 +23,7 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kaers.dev}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-kaers-admin-change-me}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-saathvik2005}
       CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
     depends_on:
       db:

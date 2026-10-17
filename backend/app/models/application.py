@@ -38,10 +38,13 @@ class Application(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Fernet-encrypted JSON blob holding auth fields only; None when unused.
     connection_config_encrypted: Mapped[bytes | None] = mapped_column(nullable=True)
     connection_base_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    invoke_path: Mapped[str] = mapped_column(String(500), default="", nullable=False)
     capabilities: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
     current_version_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     owner: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # Sanitized result of the most recent connection test (no secrets).
+    last_connection_test: Mapped[dict | None] = mapped_column(JSONType, nullable=True)
 
     configs: Mapped[list[ApplicationConfig]] = relationship(
         back_populates="application",
