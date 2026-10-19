@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: "/applications", label: "Applications" },
   { to: "/datasets", label: "Datasets" },
   { to: "/evaluations", label: "Evaluations" },
+  { to: "/compare", label: "Compare" },
   { to: "/security", label: "Security" },
 ];
 

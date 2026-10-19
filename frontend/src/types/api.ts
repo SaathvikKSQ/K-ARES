@@ -274,3 +274,87 @@ export interface CaseResult {
   error_message: string | null;
   metrics: MetricValue[];
 }
+
+// ---- Phase 4: Reports & Dashboard ----
+
+export interface RunStatusCount {
+  status: string;
+  count: number;
+}
+
+export interface RecentFailure {
+  result_id: string;
+  run_id: string;
+  external_id: string | null;
+  outcome: string;
+  error_type: string | null;
+  error_message: string | null;
+  created_at: string | null;
+}
+
+export interface KeyMetricSummary {
+  run_id: string;
+  application_name: string | null;
+  completed_at: string | null;
+  success_rate: number | null;
+  latency_mean_ms: number | null;
+  total_cost_usd: number | null;
+  success_rate_status: string;
+  latency_status: string;
+  cost_status: string;
+}
+
+export interface OverviewOut {
+  totals: Record<string, number>;
+  status_breakdown: RunStatusCount[];
+  recent_runs: RunSummary[];
+  key_metrics: KeyMetricSummary[];
+  recent_failures: RecentFailure[];
+}
+
+export interface MetricDelta {
+  evaluator_id: string;
+  baseline: number | null;
+  candidate: number | null;
+  delta: number | null;
+  regression: boolean | null;
+  provenance: string;
+  value_kind: string;
+  unavailable_reason: string | null;
+}
+
+export interface LatencyDelta {
+  baseline_mean_ms: number | null;
+  candidate_mean_ms: number | null;
+  delta_ms: number | null;
+  baseline_p95_ms: number | null;
+  candidate_p95_ms: number | null;
+}
+
+export interface CostDelta {
+  baseline_total_usd: number | null;
+  candidate_total_usd: number | null;
+  delta_usd: number | null;
+  unavailable_reason: string | null;
+}
+
+export interface CompareOut {
+  baseline_run_id: string;
+  candidate_run_id: string;
+  dataset_compatible: boolean;
+  metric_deltas: MetricDelta[];
+  newly_failing_case_ids: string[];
+  resolved_case_ids: string[];
+  latency_delta: LatencyDelta | null;
+  cost_delta: CostDelta | null;
+  baseline: Record<string, unknown>;
+  candidate: Record<string, unknown>;
+}
+
+export interface CaseResultDetail extends CaseResult {
+  case_input: Record<string, unknown>;
+  expected_output: string | null;
+  retrieved_document_ids: string[] | null;
+  agent_trace: Record<string, unknown> | null;
+  category: string | null;
+}

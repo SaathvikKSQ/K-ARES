@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.api.deps import CurrentUser, DbSession, EditorUser
 from app.evaluation import registry
@@ -20,6 +20,7 @@ from app.evaluation.errors import (
     RunConfigError,
     UnknownEvaluatorError,
 )
+from app.schemas.report import CompareOut, CompareRequest
 from app.schemas.run import (
     CaseResultDetailOut,
     PageOut,
@@ -29,6 +30,7 @@ from app.schemas.run import (
     ValidateConfigIn,
     ValidateConfigOut,
 )
+from app.services import report_service
 from app.services import run_service as svc
 
 router = APIRouter(tags=["evaluations"])
@@ -189,3 +191,45 @@ def cancel_evaluation(run_id: str, session: DbSession, user: EditorUser):
     except EvaluationError as exc:
         raise _map_error(exc) from exc
     return svc.to_summary(run)
+
+    return svc.to_summary(run)
+
+
+@router.post("/evaluations/compare", response_model=CompareOut)
+def compare_evaluations(payload: CompareRequest, session: DbSession, user: CurrentUser):
+    """Compare two completed runs: deltas, regressions, case flips (FR-F3)."""
+    try:
+        return report_service.compare_runs(
+            session, payload.baseline_run_id, payload.candidate_run_id
+        )
+    except EvaluationError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/evaluations/{run_id}/export")
+def export_evaluation(
+    run_id: str,
+    session: DbSession,
+    user: CurrentUser,
+    format: str = Query(default="json", pattern="^(json|csv)$"),
+):
+    """Download a run report as JSON or CSV (FR-H1/H2/H3)."""
+    run = svc.get_run_or_404(session, run_id)
+    safe_format = format.lower()
+    if safe_format == "csv":
+        content = report_service.export_csv(session, run)
+        media_type = "text/csv; charset=utf-8"
+        filename = f"run-{run_id}-export.csv"
+    else:
+        import json as _json
+
+        content = _json.dumps(
+            report_service.build_export_payload(session, run), indent=2, default=str
+        )
+        media_type = "application/json"
+        filename = f"run-{run_id}-export.json"
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

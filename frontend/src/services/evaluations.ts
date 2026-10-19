@@ -1,6 +1,7 @@
 import { api } from "./api";
 import type {
   CaseResult,
+  CaseResultDetail,
   MetricSpec,
   Page,
   RunCreateInput,
@@ -61,6 +62,16 @@ export async function listRunResults(
   const { data } = await api.get<Page<CaseResult>>(
     `/evaluations/${runId}/results`,
     { params },
+  );
+  return data;
+}
+
+export async function getRunResult(
+  runId: string,
+  resultId: string,
+): Promise<CaseResultDetail> {
+  const { data } = await api.get<CaseResultDetail>(
+    `/evaluations/${runId}/results/${resultId}`,
   );
   return data;
 }

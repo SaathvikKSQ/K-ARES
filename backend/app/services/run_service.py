@@ -408,11 +408,20 @@ def get_result_detail(session: Session, run_id: str, result_id: str) -> dict[str
         raise HTTPException(status_code=404, detail="Result not found for this run")
     case = session.get(TestCase, result.test_case_id)
     detail = _result_item(result, case)
+    docs = result.retrieved_documents or []
+    doc_ids: list[str] = []
+    for doc in docs:
+        if isinstance(doc, dict):
+            doc_id = doc.get("doc_id") or doc.get("id")
+            if doc_id:
+                doc_ids.append(str(doc_id))
+        elif isinstance(doc, str) and doc:
+            doc_ids.append(doc)
     detail.update(
         {
             "case_input": (case.input if case else {}) or {},
             "expected_output": case.expected_output if case else None,
-            "retrieved_document_ids": None,
+            "retrieved_document_ids": doc_ids or None,
             "agent_trace": result.agent_trace,
             "category": case.category if case else None,
         }

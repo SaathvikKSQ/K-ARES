@@ -1,6 +1,17 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { cancelRun, getRun, listRunResults } from "../services/evaluations";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { cancelRun, getRun, getRunResult, listRunResults } from "../services/evaluations";
+import { exportRun } from "../services/reports";
 import { useAuth } from "../features/auth/useAuth";
 import type { MetricValue, RunStatus } from "../types/api";
 import { EmptyState } from "./OverviewPage";
@@ -83,9 +94,19 @@ export default function RunDetailPage() {
       query.state.data && ACTIVE_STATUSES.includes(query.state.data.status) ? 2000 : false,
   });
 
+  const [resultPage, setResultPage] = useState(1);
+  const [outcomeFilter, setOutcomeFilter] = useState("");
+  const [expandedResultId, setExpandedResultId] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
   const results = useQuery({
-    queryKey: ["evaluation-results", runId],
-    queryFn: () => listRunResults(runId as string, { page_size: 25 }),
+    queryKey: ["evaluation-results", runId, resultPage, outcomeFilter],
+    queryFn: () =>
+      listRunResults(runId as string, {
+        page: resultPage,
+        page_size: 25,
+        ...(outcomeFilter ? { outcome: outcomeFilter } : {}),
+      }),
     enabled: Boolean(runId) && run?.status === "completed",
   });
 
@@ -95,6 +116,21 @@ export default function RunDetailPage() {
       void queryClient.invalidateQueries({ queryKey: ["evaluation", runId] });
     },
   });
+
+  const downloadExport = async (format: "json" | "csv") => {
+    setExportError(null);
+    try {
+      const { filename, blob } = await exportRun(runId as string, format);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError(`Export (${format}) failed.`);
+    }
+  };
 
   if (isLoading) return <p className="text-sm text-slate-500">Loading run...</p>;
   if (isError || !run) {
@@ -131,7 +167,30 @@ export default function RunDetailPage() {
             {cancel.isPending ? "Cancelling..." : "Cancel run"}
           </button>
         )}
+        {run.status === "completed" && (
+          <>
+            <button
+              type="button"
+              onClick={() => void downloadExport("json")}
+              className="ml-auto rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Export JSON
+            </button>
+            <button
+              type="button"
+              onClick={() => void downloadExport("csv")}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Export CSV
+            </button>
+          </>
+        )}
       </div>
+      {exportError && (
+        <p role="alert" className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {exportError}
+        </p>
+      )}
 
       {cancel.isError && (
         <p role="alert" className="mb-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -183,6 +242,7 @@ export default function RunDetailPage() {
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <div>
           <h2 className="mb-2 text-sm font-semibold text-slate-700">Aggregate metrics</h2>
+          <SummaryChart metrics={run.summary_metrics} />
           {run.summary_metrics.length === 0 ? (
             <EmptyState title="No aggregate metrics yet" hint="Available once the run completes." />
           ) : (
@@ -204,14 +264,211 @@ export default function RunDetailPage() {
           ) : results.data && results.data.items.length === 0 ? (
             <EmptyState title="No case results" />
           ) : results.data ? (
-            <ul className="space-y-2">
-              {results.data.items.map((r) => (
-                <ResultRow key={r.id} result={r} />
-              ))}
-            </ul>
+            <>
+              <div className="mb-2 flex items-center gap-2">
+                <label className="text-xs text-slate-600">
+                  Outcome
+                  <select
+                    value={outcomeFilter}
+                    onChange={(e) => {
+                      setOutcomeFilter(e.target.value);
+                      setResultPage(1);
+                    }}
+                    className="ml-2 rounded-md border border-slate-300 px-2 py-1 text-xs"
+                  >
+                    <option value="">All</option>
+                    <option value="success">success</option>
+                    <option value="application_error">application_error</option>
+                    <option value="timeout">timeout</option>
+                    <option value="invalid_case">invalid_case</option>
+                    <option value="skipped">skipped</option>
+                  </select>
+                </label>
+                <div className="ml-auto flex items-center gap-2 text-xs text-slate-600">
+                  <button
+                    type="button"
+                    disabled={results.data.page <= 1}
+                    onClick={() => setResultPage((p) => Math.max(1, p - 1))}
+                    className="rounded-md border border-slate-300 px-2 py-1 hover:bg-slate-50 disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <span>
+                    {results.data.page}/
+                    {Math.max(1, Math.ceil(results.data.total / results.data.page_size))}
+                    {" "}
+                    ({results.data.total} cases)
+                  </span>
+                  <button
+                    type="button"
+                    disabled={results.data.page * results.data.page_size >= results.data.total}
+                    onClick={() => setResultPage((p) => p + 1)}
+                    className="rounded-md border border-slate-300 px-2 py-1 hover:bg-slate-50 disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+              <ul className="space-y-2">
+                {results.data.items.map((r) => (
+                  <li key={r.id}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setExpandedResultId(expandedResultId === r.id ? null : r.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          setExpandedResultId(expandedResultId === r.id ? null : r.id);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <ResultRow result={r} />
+                    </div>
+                    {expandedResultId === r.id && (
+                      <ResultDetail runId={runId as string} resultId={r.id} />
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : null}
         </div>
       </div>
     </section>
+  );
+}
+
+/** Bar chart of computed aggregate metrics (T4.4) — hidden when nothing is computed. */
+function SummaryChart({ metrics }: { metrics: MetricValue[] }) {
+  const data = metrics
+    .filter((m) => m.status === "computed" && m.score != null)
+    .map((m) => ({ name: m.evaluator_id, score: m.score as number }));
+  if (data.length === 0) return null;
+  return (
+    <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+      <h3 className="mb-2 text-xs font-semibold uppercase text-slate-500">
+        Aggregate scores
+      </h3>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 10 }}
+            interval={0}
+            angle={-25}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis tick={{ fontSize: 11 }} />
+          <Tooltip />
+          <Bar dataKey="score" fill="#2563eb" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** Expandable per-case detail (T4.2): expected vs actual, references, traces,
+ * per-metric explanations, provenance tags. Loaded on demand per result. */
+function ResultDetail({ runId, resultId }: { runId: string; resultId: string }) {
+  const detail = useQuery({
+    queryKey: ["run-result-detail", runId, resultId],
+    queryFn: () => getRunResult(runId, resultId),
+  });
+
+  if (detail.isLoading) {
+    return <p className="mt-1 px-3 text-xs text-slate-500">Loading detail…</p>;
+  }
+  if (detail.isError || !detail.data) {
+    return <p className="mt-1 px-3 text-xs text-rose-600">Could not load result detail.</p>;
+  }
+  const d = detail.data;
+
+  return (
+    <div className="mt-1 rounded-md border border-blue-100 bg-blue-50/50 p-3 text-xs">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div>
+          <h3 className="text-[11px] font-semibold uppercase text-slate-500">Expected</h3>
+          <p className="mt-0.5 whitespace-pre-wrap text-slate-700">
+            {d.expected_output ?? "—"}
+          </p>
+        </div>
+        <div>
+          <h3 className="text-[11px] font-semibold uppercase text-slate-500">Actual</h3>
+          <p className="mt-0.5 whitespace-pre-wrap text-slate-700">
+            {d.actual_output ?? "—"}
+          </p>
+        </div>
+      </div>
+      <p className="mt-1 text-slate-500">
+        {d.category ? `Category: ${d.category}` : null}
+        {d.repeat_index > 0 ? ` repeat #${d.repeat_index}` : ""}
+      </p>
+
+      {Object.keys(d.case_input).length > 0 && (
+        <details className="mt-2">
+          <summary className="cursor-pointer text-slate-600">Case input</summary>
+          <pre className="mt-1 overflow-x-auto rounded bg-white p-2 text-[11px] text-slate-700">
+            {JSON.stringify(d.case_input, null, 2)}
+          </pre>
+        </details>
+      )}
+
+      {d.retrieved_document_ids && d.retrieved_document_ids.length > 0 && (
+        <div className="mt-2">
+          <h3 className="text-[11px] font-semibold uppercase text-slate-500">
+            Retrieved documents (references)
+          </h3>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {d.retrieved_document_ids.map((id) => (
+              <li
+                key={id}
+                className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] shadow-sm"
+              >
+                {id}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {d.agent_trace && (
+        <details className="mt-2">
+          <summary className="cursor-pointer text-slate-600">Agent trace</summary>
+          <pre className="mt-1 overflow-x-auto rounded bg-white p-2 text-[11px] text-slate-700">
+            {JSON.stringify(d.agent_trace, null, 2)}
+          </pre>
+        </details>
+      )}
+
+      <div className="mt-2">
+        <h3 className="text-[11px] font-semibold uppercase text-slate-500">Case metrics</h3>
+        <ul className="mt-1 space-y-1">
+          {d.metrics.map((m) => (
+            <li key={m.evaluator_id} className="rounded bg-white p-2">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-800">{m.evaluator_id}</span>
+                <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] uppercase text-blue-700">
+                  {m.provenance}
+                </span>
+                {m.status === "computed" && m.score != null ? (
+                  <span className="font-mono text-slate-900">{m.score}</span>
+                ) : (
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
+                    unavailable
+                  </span>
+                )}
+              </div>
+              {m.status === "unavailable" && m.unavailable_reason && (
+                <p className="mt-0.5 text-amber-700">Unavailable: {m.unavailable_reason}</p>
+              )}
+              {m.explanation && <p className="mt-0.5 text-slate-500">{m.explanation}</p>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }

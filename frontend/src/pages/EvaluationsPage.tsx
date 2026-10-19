@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { listRuns } from "../services/evaluations";
@@ -27,10 +28,26 @@ export function runStatusLabel(status: RunStatus): string {
 }
 
 export default function EvaluationsPage() {
+  const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["evaluations"],
-    queryFn: () => listRuns({ page_size: 25 }),
+    queryKey: ["evaluations", page, statusFilter],
+    queryFn: () =>
+      listRuns({
+        page,
+        page_size: 25,
+        ...(statusFilter ? { status: statusFilter } : {}),
+      }),
   });
+
+  const runs = (data?.items ?? []).filter(
+    (run) =>
+      !search ||
+      run.id.toLowerCase().includes(search.toLowerCase()) ||
+      (run.triggered_by ?? "").toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <section>
@@ -44,21 +61,73 @@ export default function EvaluationsPage() {
         </Link>
       </div>
 
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by run id or user…"
+          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+        />
+        <label className="text-xs text-slate-600">
+          Status
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="ml-1 rounded-md border border-slate-300 px-2 py-1 text-xs"
+          >
+            <option value="">All</option>
+            <option value="queued">queued</option>
+            <option value="running">running</option>
+            <option value="completed">completed</option>
+            <option value="failed">failed</option>
+            <option value="cancelled">cancelled</option>
+          </select>
+        </label>
+        {data && data.total > data.page_size && (
+          <div className="ml-auto flex items-center gap-2 text-xs text-slate-600">
+            <button
+              type="button"
+              disabled={data.page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="rounded-md border border-slate-300 px-2 py-1 hover:bg-slate-50 disabled:opacity-40"
+            >
+              Prev
+            </button>
+            <span>
+              {data.page}/{Math.max(1, Math.ceil(data.total / data.page_size))} ({data.total}{" "}
+              runs)
+            </span>
+            <button
+              type="button"
+              disabled={data.page * data.page_size >= data.total}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded-md border border-slate-300 px-2 py-1 hover:bg-slate-50 disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+
       {isLoading && <p className="text-sm text-slate-500">Loading runs...</p>}
       {isError && (
         <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           Failed to load evaluation runs.
         </p>
       )}
-      {data && data.items.length === 0 && (
+      {data && runs.length === 0 && (
         <EmptyState
-          title="No evaluation runs yet"
-          hint="Create a run against a registered application and dataset."
+          title="No matching evaluation runs"
+          hint="Adjust the filter, search, or create a new run."
         />
       )}
-      {data && data.items.length > 0 && (
+      {data && runs.length > 0 && (
         <ul className="space-y-3" aria-label="Evaluation runs">
-          {data.items.map((run) => (
+          {runs.map((run) => (
             <li key={run.id} className="rounded-lg border border-slate-200 bg-white p-4">
               <div className="flex items-center gap-2">
                 <Link

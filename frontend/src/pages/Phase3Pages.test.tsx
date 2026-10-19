@@ -18,6 +18,7 @@ vi.mock("../services/evaluations", () => ({
   listRuns: vi.fn(async () => ({ items: [mockRunSummary], page: 1, page_size: 25, total: 1 })),
   getRun: vi.fn(async () => mockRunDetail),
   listRunResults: vi.fn(async () => ({ items: [], page: 1, page_size: 25, total: 0 })),
+  getRunResult: vi.fn(),
   cancelRun: vi.fn(),
 }));
 
@@ -192,11 +193,10 @@ describe("EvaluationsPage", () => {
   it("renders run history with status and progress", async () => {
     const { default: EvaluationsPage } = await import("./EvaluationsPage");
     renderWithProviders(<EvaluationsPage />);
-    expect(await screen.findByText("completed")).toBeInTheDocument();
-    expect(screen.getByText("3/3 cases")).toBeInTheDocument();
-    expect(
-      screen.getByText(/answer.exact_match, reliability.success_rate/),
-    ).toBeInTheDocument();
+    // Await on data-flagged content: the status filter select also contains
+    // the literal "completed", so await something only present after load.
+    expect(await screen.findByText("3/3 cases")).toBeInTheDocument();
+    expect(screen.getByText(/answer.exact_match, reliability.success_rate/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /new evaluation/i })).toBeInTheDocument();
   });
 });
@@ -240,8 +240,10 @@ describe("RunDetailPage", () => {
     );
     expect(await screen.findByText(/run 11111111/i)).toBeInTheDocument();
     expect(screen.getByText("3/3")).toBeInTheDocument();
+    // The summary appears twice (bar-chart axis + metric row) now that
+    // a Recharts bar chart accompanies the metric list.
     const section = screen.getByText("Aggregate metrics").closest("div") as HTMLElement;
-    expect(within(section).getByText("reliability.success_rate")).toBeInTheDocument();
+    expect(within(section).getAllByText("reliability.success_rate").length).toBeGreaterThanOrEqual(1);
     expect(
       within(section).getByText(/application did not report token usage/),
     ).toBeInTheDocument();

@@ -182,8 +182,6 @@ def delete_application(session: Session, app_id: str) -> None:
     session.commit()
 
 
-#__PART3__
-
 def build_adapter_config(
     app: Application, credentials: dict[str, Any] | None = None
 ) -> dict[str, Any]:

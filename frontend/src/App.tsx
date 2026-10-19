@@ -9,6 +9,7 @@ import EvaluationsPage from "./pages/EvaluationsPage";
 import NewEvaluationPage from "./pages/NewEvaluationPage";
 import RunDetailPage from "./pages/RunDetailPage";
 import { SecurityPage } from "./pages/PlaceholderPages";
+import ComparePage from "./pages/ComparePage";
 import { useAuth } from "./features/auth/useAuth";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/evaluations" element={<EvaluationsPage />} />
         <Route path="/evaluations/new" element={<NewEvaluationPage />} />
         <Route path="/evaluations/:runId" element={<RunDetailPage />} />
+        <Route path="/compare" element={<ComparePage />} />
         <Route path="/security" element={<SecurityPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
