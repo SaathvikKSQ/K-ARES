@@ -54,13 +54,15 @@ class MockAdapter(TargetAdapter):
         prefix = self.config.get("output_prefix", "")
         output = f"{prefix}{question}" if prefix else f"MOCK-ANSWER: {question}"
 
+        docs = self._mock_documents(case_input)
         usage = None
         if self._capabilities.exposes_token_usage:
             usage = {"input": max(1, len(question.split())), "output": max(1, len(output.split()))}
 
         return AdapterResponse(
             output=output,
-            retrieved_documents=self._mock_documents(case_input),
+            retrieved_documents=docs,
+            citations=self._mock_citations(docs),
             agent_trace=self._mock_trace(case_input),
             token_usage=usage,
             ttft_ms=max(1, int((time.perf_counter() - started) * 1000) // 2)
@@ -73,8 +75,20 @@ class MockAdapter(TargetAdapter):
             return None
         labels = case_input.get("relevant_doc_ids") or []
         # Echo labeled doc ids as retrieved (deterministic, labeled fixtures only).
-        docs = [{"doc_id": str(doc_id), "score": 0.9 - i * 0.1} for i, doc_id in enumerate(labels)]
-        return docs or [{"doc_id": "mock-doc-1", "score": 0.5}]
+        docs = [
+            {
+                "doc_id": str(doc_id),
+                "content": f"MOCK-DOC: {doc_id}",
+                "score": 0.9 - i * 0.1,
+            }
+            for i, doc_id in enumerate(labels)
+        ]
+        return docs or [{"doc_id": "mock-doc-1", "content": "MOCK-DOC: mock-doc-1", "score": 0.5}]
+
+    def _mock_citations(self, docs: list[dict[str, Any]] | None) -> list[dict[str, Any]] | None:
+        if not self._capabilities.exposes_citations:
+            return None
+        return [{"doc_id": d["doc_id"], "position": i} for i, d in enumerate(docs or [])]
 
     def _mock_trace(self, case_input: dict[str, Any]) -> dict[str, Any] | None:
         if not self._capabilities.exposes_traces:

@@ -8,7 +8,17 @@ changes required (FR-E3).
 
 from __future__ import annotations
 
-from app.evaluation.evaluators import answer, cost, performance, reliability  # noqa: F401
+# Phase 5 (T5.1/T5.2/T5.4/T5.6): advanced evaluator modules.
+from app.evaluation.evaluators import (  # noqa: F401  # noqa: F401
+    agent,
+    answer,
+    cost,
+    performance,
+    rag,
+    reliability,
+    retrieval,
+    similarity,
+)
 
 CORE_EVALUATOR_IDS = (
     "answer.exact_match",

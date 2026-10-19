@@ -8,7 +8,7 @@ import DatasetsPage from "./pages/DatasetsPage";
 import EvaluationsPage from "./pages/EvaluationsPage";
 import NewEvaluationPage from "./pages/NewEvaluationPage";
 import RunDetailPage from "./pages/RunDetailPage";
-import { SecurityPage } from "./pages/PlaceholderPages";
+import SecurityPage from "./pages/SecurityPage";
 import ComparePage from "./pages/ComparePage";
 import { useAuth } from "./features/auth/useAuth";
 

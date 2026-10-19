@@ -72,7 +72,6 @@ class MetricValue:
             "details": self.details,
         }
 
-
 @dataclass(frozen=True)
 class RepeatRecord:
     """One adapter invocation of one test case (repeat_index i)."""
@@ -84,6 +83,8 @@ class RepeatRecord:
     ttft_ms: int | None = None
     token_usage: dict[str, int] | None = None
     retrieved_document_ids: list[str] | None = None
+    retrieved_documents: list[dict[str, Any]] | None = None  # {doc_id, content, ...}
+    citations: list[str] | None = None  # cited doc ids in output order
     agent_trace: dict[str, Any] | None = None
     error_type: str | None = None
     error_message: str | None = None
@@ -97,8 +98,10 @@ class CaseData:
     position: int
     case_input: dict[str, Any]
     expected_output: str | None = None
+    reference_context: str | None = None
     relevant_doc_ids: list[str] | None = None  # None = not labeled; [] = labeled empty
     expected_tool: dict[str, Any] | None = None
+    expected_action_sequence: list[str] | None = None
     category: str | None = None
     external_id: str | None = None
     is_security_case: bool = False

@@ -244,6 +244,7 @@ export interface RunCreateInput {
   dataset_version_id?: string | null;
   metric_ids: string[];
   run_config?: Partial<RunConfigInput>;
+  include_security_suite?: boolean;
 }
 
 export interface ValidateConfigInput {
@@ -357,4 +358,26 @@ export interface CaseResultDetail extends CaseResult {
   retrieved_document_ids: string[] | null;
   agent_trace: Record<string, unknown> | null;
   category: string | null;
+}
+
+// --- Phase 5: security suite catalog (T5.5) ---
+
+export interface SecuritySuiteCase {
+  id: string;
+  expected_behavior: string;
+}
+
+export interface SecuritySuiteCategory {
+  category: string;
+  case_count: number;
+  cases: SecuritySuiteCase[];
+}
+
+export interface SecurityCatalog {
+  suite_id: string;
+  version: string;
+  description: string;
+  disclaimer: string;
+  case_count: number;
+  categories: SecuritySuiteCategory[];
 }

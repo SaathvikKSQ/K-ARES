@@ -15,6 +15,8 @@ class RunConfigIn(BaseModel):
     max_retries: int = Field(default=1, ge=0, le=3)
     repeats: int = Field(default=1, ge=1, le=5)
     rate_limit_rps: float = Field(default=0, ge=0, le=100)
+    # T5.5: append the system-generated controlled security suite cases.
+    include_security_suite: bool = False
 
 
 class RunCreate(BaseModel):

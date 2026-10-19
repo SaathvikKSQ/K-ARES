@@ -52,7 +52,8 @@ export default function NewEvaluationPage() {
   const [datasetId, setDatasetId] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [preview, setPreview] = useState<Awaited<ReturnType<typeof validateRunConfig>> | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+const [actionError, setActionError] = useState<string | null>(null);
+  const [securitySuite, setSecuritySuite] = useState(false);
 
   const apps = useQuery({ queryKey: ["applications"], queryFn: () => listApplications() });
   const datasets = useQuery({ queryKey: ["datasets"], queryFn: listDatasets });
@@ -95,6 +96,7 @@ export default function NewEvaluationPage() {
         application_id: applicationId,
         dataset_id: datasetId,
         metric_ids: selected,
+        include_security_suite: securitySuite,
       }),
     onSuccess: (run) => navigate(`/evaluations/${run.id}`),
     onError: (err: unknown) => setActionError(extractMessage(err, "Could not create the run.")),
@@ -169,6 +171,24 @@ export default function NewEvaluationPage() {
             </ul>
           )}
         </div>
+
+        <label className="flex items-start gap-2 text-xs text-slate-600">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={securitySuite}
+            onChange={(e) => setSecuritySuite(e.target.checked)}
+          />
+          <span>
+            <span className="font-medium text-slate-700">
+              Include controlled security suite
+            </span>{" "}
+            - appends system-generated, code-versioned security cases
+            (8 categories) with pass/fail/inconclusive verdicts. Passing
+            the suite does not prove the target is secure; coverage is
+            limited to the listed scenarios.
+          </span>
+        </label>
 
         <div className="flex items-center gap-3">
           <button

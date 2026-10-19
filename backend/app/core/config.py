@@ -57,6 +57,17 @@ class Settings(BaseSettings):
     retention_days_exports: int = 7
 
     # Initial admin bootstrap (env-seeded; see specs/decisions.md D8 / open question 5)
+    # Retention (days)
+    retention_days_artifacts: int = 90
+    retention_days_exports: int = 7
+
+    # LLM-as-a-judge (T5.3): disabled unless a model + endpoint are configured
+    judge_model: str | None = None
+    judge_provider_url: str | None = None
+    judge_api_key: str | None = None
+
+    # Semantic similarity embedding model (T5.6): disabled unless configured
+    embedding_model: str | None = None
     admin_email: str | None = None
     admin_password: str | None = None
 

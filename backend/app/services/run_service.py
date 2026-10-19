@@ -525,8 +525,14 @@ class DbEnginePorts:
                     position=c.position,
                     case_input=dict(c.input or {"input": ""}),
                     expected_output=c.expected_output,
+                    reference_context=c.reference_context,
                     relevant_doc_ids=c.relevant_doc_ids,
                     expected_tool=c.expected_tool,
+                    expected_action_sequence=(
+                        [str(a) for a in c.expected_action_sequence]
+                        if c.expected_action_sequence is not None
+                        else None
+                    ),
                     category=c.category,
                     external_id=c.external_id,
                     is_security_case=c.is_security_case,

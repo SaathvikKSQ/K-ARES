@@ -67,6 +67,22 @@ class EvaluationEngine:
         plan: RunPlan | None = None
         try:
             plan = self.ports.load_plan(run_id)
+            # Security suite (T5.5): system-generated controlled cases appended
+            # after the user's dataset selection; verdict metric auto-selected.
+            if plan.run_config.get("include_security_suite"):
+                from app.evaluation.security.suite import build_security_cases
+
+                extra = build_security_cases()
+                object.__setattr__(plan, "cases", list(plan.cases) + extra)
+                if not any(
+                    s.get("evaluator_id") == "security.verdict"
+                    for s in plan.selected_metrics
+                ):
+                    object.__setattr__(
+                        plan,
+                        "selected_metrics",
+                        list(plan.selected_metrics) + [{"evaluator_id": "security.verdict"}],
+                    )
             adapter = self.ports.build_adapter(run_id)
             wall_start = time.perf_counter()
             self.ports.mark_running(run_id)
@@ -215,6 +231,10 @@ class EvaluationEngine:
                 retrieved_document_ids=[
                     d.doc_id for d in (response.retrieved_documents or [])
                 ],
+                retrieved_documents=[
+                    d.model_dump() for d in (response.retrieved_documents or [])
+                ],
+                citations=[c.doc_id for c in (response.citations or [])],
                 agent_trace=response.agent_trace,
             )
         assert last is not None
@@ -227,6 +247,9 @@ class EvaluationEngine:
             spec, fn = registry.get(selection["evaluator_id"])
             if spec.scope != "case":
                 continue
+            # Per-evaluator config merged over the run config (judge/embedding
+            # settings, thresholds, k values; T5.3/T5.6).
+            case_input.config = {**plan.run_config, **(selection.get("config") or {})}
             values.append(fn(case_input))
         return values
 

@@ -12,7 +12,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import applications, auth, dashboard, datasets, evaluations, health
+from app.api.routes import (
+    applications,
+    auth,
+    dashboard,
+    datasets,
+    evaluations,
+    health,
+    security,
+)
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
@@ -62,6 +70,7 @@ def create_app() -> FastAPI:
     app.include_router(datasets.router, prefix="/api/v1")
     app.include_router(evaluations.router, prefix="/api/v1")
     app.include_router(dashboard.router, prefix="/api/v1")
+    app.include_router(security.router, prefix="/api/v1")
 
     return app
 
